@@ -14,6 +14,13 @@ import mainform
 
 from rfidCard import rfidCard
 
+def tohex(dec):
+    s = hex(dec).split('x')[-1]
+    s = s.upper()
+    if len(s) == 1:
+        s = "0" + s
+    return s
+
 
 class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
     """ Класс главного окна приложения """
@@ -28,7 +35,8 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
         del(self.card)
 
     def buttonclick(self):
-        self.card.readUID()
+        res = list(map(tohex, self.card.readUID()))
+        self.label.setText(" ".join(res))
 
     
 
