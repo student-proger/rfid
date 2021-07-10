@@ -3,8 +3,8 @@ from pywinusb import hid
 TX_BUF_SIZE = 18
 
 class hidDevice():
-    def __init__(self, vid, pid):
-        self.openHID(vid, pid)
+    def __init__(self, vid, pid, callback):
+        self.openHID(vid, pid, callback)
 
     def __del__(self):
         self.closeHID()
@@ -20,8 +20,7 @@ class hidDevice():
             buff.append(0x00)
 
         try:
-            print(">> ", end="")
-            print(buff)
+            print("<< ", buff)
             self.out_report.set_raw_data(buff)
             self.out_report.send()
         except AttributeError:
@@ -29,7 +28,7 @@ class hidDevice():
         except:
             return
 
-    def openHID(self, vid, pid):
+    def openHID(self, vid, pid, callback):
         """ Открытие USB HID устройства для работы.
 
         vid -- Vendor ID
@@ -41,7 +40,7 @@ class hidDevice():
             self.device = devices[0]
             print("USB device founded.")
             
-            self.device.set_raw_data_handler(self.readHID)
+            self.device.set_raw_data_handler(callback)
             self.device.open()
             
             self.out_report = self.device.find_output_reports()[0]
@@ -55,7 +54,3 @@ class hidDevice():
             return
         except:
             pass
-
-    def readHID(self, msg):
-        print("<< ", end="")
-        print(msg)
