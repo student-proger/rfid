@@ -12,7 +12,7 @@ from PyQt5.QtCore import Qt, QRect
 # design
 import mainform
 
-from hidDevice import hidDevice
+from rfidCard import rfidCard
 
 
 class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
@@ -22,13 +22,13 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
         self.setupUi(self)  # Это нужно для инициализации нашего дизайна
         self.pushButton.clicked.connect(self.buttonclick)
 
-        self.hid = hidDevice(vid = 0x1EAF, pid = 0x0030)
+        self.card = rfidCard()
 
     def __del__(self):
-        del(self.hid)
+        del(self.card)
 
     def buttonclick(self):
-        self.hid.writeHID([0x01])
+        self.card.readUID()
 
     
 
