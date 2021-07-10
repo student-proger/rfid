@@ -13,41 +13,34 @@ from PyQt5.QtCore import Qt, QRect
 # design
 import mainform
 
-def sample_handler(msg):
-    print(":")
-    print(msg)
+TX_BUF_SIZE = 18
 
-class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
-    """ Класс главного окна приложения """
-    def __init__(self):
-        super().__init__()
-        self.setupUi(self)  # Это нужно для инициализации нашего дизайна
-        self.pushButton.clicked.connect(self.buttonclick)
-
-        self.openHID(vid = 0x1EAF, pid = 0x0030)
-
+class hidDevice():
+    def __init__(self, vid, pid):
+        self.openHID(vid, pid)
 
     def __del__(self):
         self.closeHID()
 
-    def writeHID(self):
+    def writeHID(self, buf):
         """ Отправка данных на USB HID устройство """
-        buf = [0x00]
+        buff = [0x00]
 
-        for i in range(0, 18):
-            buf.append(0x01)
+        for item in buf:
+            buff.append(item)
+
+        while len(buff) < TX_BUF_SIZE + 1:
+            buff.append(0x00)
 
         try:
-            print(buf)
-            self.out_report.set_raw_data(buf)
+            print(">> ", end="")
+            print(buff)
+            self.out_report.set_raw_data(buff)
             self.out_report.send()
         except AttributeError:
             return
         except:
             return
-
-    def buttonclick(self):
-        self.writeHID()
 
     def openHID(self, vid, pid):
         """ Открытие USB HID устройства для работы.
@@ -61,25 +54,42 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
             self.device = devices[0]
             print("USB device founded.")
             
-            self.device.set_raw_data_handler(sample_handler)
+            self.device.set_raw_data_handler(self.readHID)
             self.device.open()
             
             self.out_report = self.device.find_output_reports()[0]
-         
-
 
     def closeHID(self):
         """ Закрытие USB HID устройства """
-        buf = [0x00]
-
         try:
-            self.out_report.set_raw_data(buf)
-            self.out_report.send()
             self.device.close()
+            del(self.out_report)
         except AttributeError:
             return
         except:
             pass
+
+    def readHID(self, msg):
+        print("<< ", end="")
+        print(msg)
+
+
+class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
+    """ Класс главного окна приложения """
+    def __init__(self):
+        super().__init__()
+        self.setupUi(self)  # Это нужно для инициализации нашего дизайна
+        self.pushButton.clicked.connect(self.buttonclick)
+
+        self.hid = hidDevice(vid = 0x1EAF, pid = 0x0030)
+
+    def __del__(self):
+        del(self.hid)
+
+    def buttonclick(self):
+        self.hid.writeHID([0x01])
+
+    
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
