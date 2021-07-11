@@ -12,14 +12,27 @@ from PyQt5.QtCore import Qt, QRect
 # design
 import mainform
 
-from rfidCard import rfidCard
+from rfidCard import rfidCard, KEYA, KEYB
 
 def tohex(dec):
+    """ Переводит десятичное число в 16-ричный вид с отбрасыванием `0x` """
     s = hex(dec).split('x')[-1]
     s = s.upper()
     if len(s) == 1:
         s = "0" + s
     return s
+
+def isFirstBlock(n):
+    if n % 4 == 0:
+        return True
+    else:
+        return False
+
+def isLastBlock(n):
+    if (n + 1) % 4 == 0:
+        return True
+    else:
+        return False
 
 
 class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
@@ -36,6 +49,8 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
 
     def buttonclick(self):
         res = list(map(tohex, self.card.readUID()))
+        res = list(map(tohex, self.card.authBlock(3, [0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5], KEYA)))
+        res = list(map(tohex, self.card.readBlock(3)))
         self.label.setText(" ".join(res))
 
     

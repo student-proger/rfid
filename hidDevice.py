@@ -1,3 +1,7 @@
+"""
+Модуль для работы с USB HID устройством
+"""
+
 from pywinusb import hid
 
 TX_BUF_SIZE = 18
