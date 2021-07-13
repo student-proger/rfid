@@ -52,3 +52,15 @@ class rfidCard():
         while self.waitdata:
             pass
         return self.rawdata
+
+    def isFirstBlock(self, n):
+        if n % 4 == 0:
+            return True
+        else:
+            return False
+
+    def isLastBlock(self, n):
+        if (n + 1) % 4 == 0:
+            return True
+        else:
+            return False

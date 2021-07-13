@@ -22,18 +22,6 @@ def tohex(dec):
         s = "0" + s
     return s
 
-def isFirstBlock(n):
-    if n % 4 == 0:
-        return True
-    else:
-        return False
-
-def isLastBlock(n):
-    if (n + 1) % 4 == 0:
-        return True
-    else:
-        return False
-
 
 class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
     """ Класс главного окна приложения """
