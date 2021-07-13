@@ -17,8 +17,8 @@
    <widget class="QPushButton" name="pushButton">
     <property name="geometry">
      <rect>
-      <x>230</x>
-      <y>40</y>
+      <x>300</x>
+      <y>10</y>
       <width>131</width>
       <height>23</height>
      </rect>
@@ -30,14 +30,24 @@
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>380</x>
-      <y>40</y>
+      <x>450</x>
+      <y>10</y>
       <width>211</width>
       <height>16</height>
      </rect>
     </property>
     <property name="text">
      <string>TextLabel</string>
+    </property>
+   </widget>
+   <widget class="QTextEdit" name="textEdit">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>40</y>
+      <width>481</width>
+      <height>441</height>
+     </rect>
     </property>
    </widget>
   </widget>
