@@ -34,7 +34,9 @@ class rfidCard():
         if self.rawdata[0] != 0xAA:
             return None
         else:
-            return self.rawdata
+            del(self.rawdata[0])
+            count = self.rawdata[0]
+            return self.rawdata[1:count + 1]
 
     def authBlock(self, n, key, key_type):
         """ Аутентификация блока номер n с помощью ключа key.
