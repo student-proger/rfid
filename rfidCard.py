@@ -8,8 +8,8 @@ KEYA = 0x00
 KEYB = 0x01
 
 class rfidCard():
-    def __init__(self):
-        self.hid = hidDevice(vid = 0x1EAF, pid = 0x0030, callback = self.callback)
+    def __init__(self, vid, pid):
+        self.hid = hidDevice(vid, pid, callback = self.callback)
         self.waitdata = False
 
     def __del__(self):

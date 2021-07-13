@@ -30,7 +30,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
         self.setupUi(self)  # Это нужно для инициализации нашего дизайна
         self.pushButton.clicked.connect(self.buttonclick)
 
-        self.card = rfidCard()
+        self.card = rfidCard(vid = 0x1EAF, pid = 0x0030)
 
     def __del__(self):
         del(self.card)
