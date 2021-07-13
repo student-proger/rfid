@@ -28,7 +28,8 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
     def __init__(self):
         super().__init__()
         self.setupUi(self)  # Это нужно для инициализации нашего дизайна
-        self.pushButton.clicked.connect(self.buttonclick)
+        self.pushButton.clicked.connect(self.buttonReadUID)
+        self.pushButton_2.clicked.connect(self.buttonReadDump)
         self.textEdit.setReadOnly(True)
 
         self.card = rfidCard(vid = 0x1EAF, pid = 0x0030)
@@ -36,12 +37,25 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
     def __del__(self):
         del(self.card)
 
-    def buttonclick(self):
-        res = list(map(tohex, self.card.readUID()))
+    def buttonReadUID(self):
+        res = self.card.readUID()
+        if res == None:
+            self.label.setText("Ошибка чтения")
+            return
+
+        res = list(map(tohex, res))
+        self.label.setText(" ".join(res))
+        self.textEdit.setHtml("")
+
+    def buttonReadDump(self):
+        res = self.card.readUID()
         if res == None:
             s = "<b>Ошибка чтения UID карты</b>"
             self.textEdit.setHtml(s)
             return
+
+        res = list(map(tohex, res))
+        self.label.setText(" ".join(res))
         s = " ".join(res) + '<br>'
         res = list(map(tohex, self.card.authBlock(3, [0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5], KEYA)))
         if res == None:

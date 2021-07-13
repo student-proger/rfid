@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>849</width>
-    <height>548</height>
+    <height>567</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <widget class="QPushButton" name="pushButton">
     <property name="geometry">
      <rect>
-      <x>300</x>
+      <x>10</x>
       <y>10</y>
       <width>131</width>
       <height>23</height>
@@ -30,11 +30,16 @@
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>450</x>
-      <y>10</y>
-      <width>211</width>
+      <x>10</x>
+      <y>40</y>
+      <width>331</width>
       <height>16</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>10</pointsize>
+     </font>
     </property>
     <property name="text">
      <string>TextLabel</string>
@@ -44,10 +49,23 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>40</y>
+      <y>70</y>
       <width>481</width>
       <height>441</height>
      </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_2">
+    <property name="geometry">
+     <rect>
+      <x>150</x>
+      <y>10</y>
+      <width>131</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Чтение дампа</string>
     </property>
    </widget>
   </widget>
