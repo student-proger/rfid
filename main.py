@@ -57,12 +57,11 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
         res = list(map(tohex, res))
         self.label.setText(" ".join(res))
         s = " ".join(res) + '<br>'
-        res = list(map(tohex, self.card.authBlock(3, [0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5], KEYA)))
-        if res == None:
+        res = self.card.authBlock(3, [0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5], KEYA)
+        if not res:
             s = "<b>Ошибка аутентификации блока</b>"
             self.textEdit.setHtml(s)
             return
-        s = s + " ".join(res) + '<br>'
         res = list(map(tohex, self.card.readBlock(3)))
         if res == None:
             s = "<b>Ошибка чтения блока</b>"
