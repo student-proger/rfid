@@ -13,6 +13,7 @@ from PyQt5.QtCore import Qt, QRect
 import mainform
 
 from rfidCard import rfidCard, KEYA, KEYB
+from key import key
 
 def tohex(dec):
     """ Переводит десятичное число в 16-ричный вид с отбрасыванием `0x` """
