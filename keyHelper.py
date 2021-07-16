@@ -15,7 +15,7 @@ class keyHelper():
     def __del__(self):
         self.fkey.close()
 
-    def empty(self):
+    def end(self):
         """ Возвращает True, если список ключей закончился.
         Используется в циклах при переборе всего списка паролей. """
         if self.nextitem >= len(self.keybuf):
@@ -29,7 +29,7 @@ class keyHelper():
 
     def get(self):
         """ Возвращает следующий ключ """
-        if self.empty():
+        if self.end():
             return None
         r = self.keybuf[self.nextitem]
         self.nextitem += 1

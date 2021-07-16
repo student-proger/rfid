@@ -49,7 +49,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
         self.textEdit.setHtml("")
 
         key = keyHelper()
-        while not key.empty():
+        while not key.end():
             print(key.get())
 
 

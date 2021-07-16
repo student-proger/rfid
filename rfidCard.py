@@ -3,7 +3,7 @@
 """
 
 # Для отладки без картридера
-FAKECARD = True
+FAKECARD = False
 
 from hidDevice import hidDevice
 

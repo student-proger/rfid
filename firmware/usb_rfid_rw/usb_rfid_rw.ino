@@ -28,6 +28,10 @@
 #define TXSIZE 17
 #define RXSIZE 18
 
+#define ZOOMMER_PIN PB10
+unsigned long zoommerTime = 0;
+bool zoommerActive = false;
+
 PN532_SPI pn532spi(SPI, PA4);
 PN532 nfc(pn532spi);
 
@@ -92,12 +96,22 @@ void setup(void)
 
   //Serial.println("Waiting for an ISO14443A Card ...");
   pinMode(PC13, OUTPUT);
+  pinMode(ZOOMMER_PIN, OUTPUT);
+  digitalWrite(ZOOMMER_PIN, LOW);
 }
 
 
-void loop(void) {
+void loop(void) 
+{
   
-
+  if (zoommerActive)
+  {
+    if (millis() - zoommerTime > 100)
+    {
+      noTone(ZOOMMER_PIN);
+      zoommerActive = false;
+    }
+  }
 
   if (raw.getOutput(rxbuf))
   {
@@ -105,9 +119,13 @@ void loop(void) {
 
     if (rxbuf[0] == 0x01) //Чтение UID карты
     {
-      success = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength);
+      success = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength, 5000);
       if (success)
       {
+        tone(ZOOMMER_PIN, 1000);
+        zoommerTime = millis();
+        zoommerActive = true;
+
         txbuf[0] = 0xAA;
         txbuf[1] = uidLength;
         for (uint8_t i = 0; i < uidLength; i++)
