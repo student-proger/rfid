@@ -13,7 +13,7 @@ from PyQt5.QtCore import Qt, QRect
 import mainform
 
 from rfidCard import rfidCard, KEYA, KEYB
-from key import key
+from keyHelper import keyHelper
 
 def tohex(dec):
     """ Переводит десятичное число в 16-ричный вид с отбрасыванием `0x` """
@@ -47,6 +47,13 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
         res = list(map(tohex, res))
         self.label.setText(" ".join(res))
         self.textEdit.setHtml("")
+
+        key = keyHelper()
+        while not key.empty():
+            print(key.get())
+
+
+        del(key)
 
     def buttonReadDump(self):
         res = self.card.readUID()

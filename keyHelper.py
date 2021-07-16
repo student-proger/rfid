@@ -2,7 +2,7 @@
 Модуль для работы с ключами доступа
 """
 
-class key():
+class keyHelper():
     def __init__(self):
         self.keybuf = []
         self.fkey = open("keys\\std.keys", "rt")
@@ -11,7 +11,6 @@ class key():
             if (item != "") and (item[0] != "#"):
                 self.keybuf.append(item)
         self.nextitem = 0
-
 
     def __del__(self):
         self.fkey.close()
@@ -30,7 +29,7 @@ class key():
 
     def get(self):
         """ Возвращает следующий ключ """
-        if self.empty:
+        if self.empty():
             return None
         r = self.keybuf[self.nextitem]
         self.nextitem += 1
