@@ -28,9 +28,15 @@
 #define TXSIZE 17
 #define RXSIZE 18
 
+//Пин подключения переключатели режима работы
+#define SWITCH_MODE_PIN PB11
+//Пин подключения зуммера
 #define ZOOMMER_PIN PB10
+//Переменные для выключения зуммера через некоторое время после его включения
 unsigned long zoommerTime = 0;
 bool zoommerActive = false;
+//Последнее состояние переключателя
+bool lastSwitchMode;
 
 PN532_SPI pn532spi(SPI, PA4);
 PN532 nfc(pn532spi);
@@ -39,6 +45,10 @@ USBHID HID;
 HIDRaw<TXSIZE,RXSIZE> raw(HID);
 uint8_t rxbuf[RXSIZE];
 uint8_t txbuf[TXSIZE];
+
+const uint8_t reportDescription[] = {
+   HID_RAW_REPORT_DESCRIPTOR(TXSIZE,RXSIZE)
+};
 
 uint8_t success;                          // Flag to check if there was an error with the PN532
 uint8_t uid[] = { 0, 0, 0, 0, 0, 0, 0 };  // Buffer to store the returned UID
@@ -52,30 +62,39 @@ bool recEnabled = false;  //Запись разрешена
 // Keyb on NDEF and Mifare Classic should be the same
 uint8_t keyuniversal[6] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 
-const uint8_t reportDescription[] = {
-   HID_RAW_REPORT_DESCRIPTOR(TXSIZE,RXSIZE)
-};
-
-
 void setup(void)
 {
+  //Настройки USB устройства
   USBComposite.setVendorId(DEVICE_VID);
   USBComposite.setProductId(DEVICE_PID);
   USBComposite.setManufacturerString(DEVICE_MANUFACTURER);
   USBComposite.setProductString(DEVICE_PRODUCT);
   USBComposite.setSerialString(DEVICE_SERIAL);
 
+  //Инициализация и запуск HID USB устройства
   HID.begin(reportDescription, sizeof(reportDescription));  
   raw.begin();
+
+  pinMode(ZOOMMER_PIN, OUTPUT);
+  digitalWrite(ZOOMMER_PIN, LOW);
+  pinMode(SWITCH_MODE_PIN, INPUT_PULLUP);
 
   // has to be fast to dump the entire memory contents!
   delay(3000);
 
+  tone(ZOOMMER_PIN, 1500);
+  delay(300);
+  noTone(ZOOMMER_PIN);
+
+  //Запоминаем текущее положение переключателя режима
+  lastSwitchMode = digitalRead(SWITCH_MODE_PIN);
+
   nfc.begin();
 
   uint32_t versiondata = nfc.getFirmwareVersion();
-  if (! versiondata) {
-    //Serial.print("Didn't find PN53x board");
+  if (! versiondata) 
+  {
+    //Не удаётся найти NFC считыватель
     while (1)
     {
       if (raw.getOutput(rxbuf))
@@ -95,15 +114,20 @@ void setup(void)
   nfc.SAMConfig();
 
   //Serial.println("Waiting for an ISO14443A Card ...");
-  pinMode(PC13, OUTPUT);
-  pinMode(ZOOMMER_PIN, OUTPUT);
-  digitalWrite(ZOOMMER_PIN, LOW);
 }
 
 
 void loop(void) 
 {
+  //Проверяем состояние переключателя режима работы.
+  //Если оно поменялось, то перезагружаем МК.
+  if (digitalRead(SWITCH_MODE_PIN) != lastSwitchMode)
+  {
+    delay(200);
+    nvic_sys_reset();
+  }
   
+  //Выключаем сигнал зумера при его активности
   if (zoommerActive)
   {
     if (millis() - zoommerTime > 100)

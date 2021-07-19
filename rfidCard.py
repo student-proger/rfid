@@ -114,3 +114,11 @@ class rfidCard():
             return True
         else:
             return False
+
+    def sectorOfBlock(self, n):
+        """ Возвращает номер сектора по номеру блока """
+        return n // 4
+
+    def blockOfSector(self, n):
+        """ Возвращает номер первого блока в секторе n """
+        return n * 4
