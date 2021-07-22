@@ -66,7 +66,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
         self.keysa = []
         self.keysb = []
         keys = keyHelper()
-        #Цикл по секторам RFID карты
+        # Цикл по секторам RFID карты. В каждой итерации пробуем подобрать пару ключей (A/B) из словаря.
         for i in range(0, 16):
             keys.reset()
             while not keys.end():
@@ -77,6 +77,8 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                     self.keysa.append(currentKey)
                     break
                 else:
+                    # При попытке авторизации сектора неправильным ключом требуется повторная инициализация карты,
+                    # для этого снова читаем её UID.
                     r = self.card.readUID()
                     if r == None:
                         print("ОШИБКА: Потеря карты")
@@ -92,24 +94,48 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                     self.keysb.append(currentKey)
                     break
                 else:
+                    # При попытке авторизации сектора неправильным ключом требуется повторная инициализация карты,
+                    # для этого снова читаем её UID.
                     r = self.card.readUID()
                     if r == None:
                         print("ОШИБКА: Потеря карты")
             else:
                 self.keysb.append(None)
-        del(keys)
 
-        print(self.keysa)
-        print(self.keysb)
+        print("KEY A: ", self.keysa)
+        print("KEY B: ", self.keysb)
 
-        '''res = list(map(tohex, self.card.readBlock(1)))
-        if res == None:
-            s = "<b>Ошибка чтения блока</b>"
-            self.textEdit.setHtml(s)
-            return
-        s = s + " ".join(res) + "<br>" '''
+        # Проверяем, есть ли смысл пытаться прочитать карту
+        flag = False
+        for item in self.keysa:
+            if item != None:
+                flag = True
+        for item in self.keysb:
+            if item != None:
+                flag = True
+
+        if flag:
+            for block in range(0, 64):
+                nokey = False
+                sector = self.card.sectorOfBlock(block)
+                if self.card.isFirstBlock(block):
+                    if self.keysb[sector] != None:
+                        res = self.card.authBlock(block, keys.keyToList(self.keysb[sector]), KEYB)
+                    elif self.keysa[sector] != None:
+                        res = self.card.authBlock(block, keys.keyToList(self.keysa[sector]), KEYA)
+                    else:
+                        # Нет ключей для сектора
+                        nokey = True
+                if not nokey:
+                    res = list(map(tohex, self.card.readBlock(block)))
+                    if res == None:
+                        s = s + str(block) + ": Ошибка чтения блока" + "<br>"
+                        return
+                    s = s + str(block) + ": " + " ".join(res) + "<br>"
+
 
         self.textEdit.setHtml(s)
+        del(keys)
 
     
 
