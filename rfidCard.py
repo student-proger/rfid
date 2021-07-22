@@ -25,7 +25,7 @@ class rfidCard():
         self.rawdata = rawdata
         del(self.rawdata[0])
         self.waitdata = False
-        print(">> ", rawdata)
+        #print(">> ", rawdata)
 
     def readUID(self):
         """ Чтение UID карты """

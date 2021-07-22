@@ -34,3 +34,11 @@ class keyHelper():
         r = self.keybuf[self.nextitem]
         self.nextitem += 1
         return r
+
+    def keyToList(self, s):
+        """ Преобразовывает строковый вид ключа к списку """
+        w = []
+        for i in range(0, 6):
+            k = "0x" + s[i * 2:i * 2 + 2]
+            w.append(int(k, 16))
+        return w

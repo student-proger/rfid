@@ -146,9 +146,9 @@ void loop(void)
       success = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength, 5000);
       if (success)
       {
-        tone(ZOOMMER_PIN, 1000);
+        /*tone(ZOOMMER_PIN, 1000);
         zoommerTime = millis();
-        zoommerActive = true;
+        zoommerActive = true;*/
 
         txbuf[0] = 0xAA;
         txbuf[1] = uidLength;

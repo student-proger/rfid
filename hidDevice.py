@@ -24,7 +24,7 @@ class hidDevice():
             buff.append(0x00)
 
         try:
-            print("<< ", buff)
+            #print("<< ", buff)
             self.out_report.set_raw_data(buff)
             self.out_report.send()
         except AttributeError:
