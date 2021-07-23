@@ -35,6 +35,8 @@
 //Переменные для выключения зуммера через некоторое время после его включения
 unsigned long zoommerTime = 0;
 bool zoommerActive = false;
+//Время последней полученной команды
+unsigned long lastCommand = 0;
 //Последнее состояние переключателя
 bool lastSwitchMode;
 
@@ -146,9 +148,13 @@ void loop(void)
       success = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength, 5000);
       if (success)
       {
-        /*tone(ZOOMMER_PIN, 1000);
-        zoommerTime = millis();
-        zoommerActive = true;*/
+        if (millis() - lastCommand > 1000)
+        {
+          tone(ZOOMMER_PIN, 1000);
+          zoommerTime = millis();
+          zoommerActive = true;
+          lastCommand = millis();
+        }
 
         txbuf[0] = 0xAA;
         txbuf[1] = uidLength;
@@ -165,6 +171,8 @@ void loop(void)
 
     if (rxbuf[0] == 0x02) //Аутентификация блока
     {
+      lastCommand = millis();
+
       currentblock = rxbuf[8];
       keyuniversal[0] = rxbuf[2];
       keyuniversal[1] = rxbuf[3];
@@ -189,6 +197,8 @@ void loop(void)
 
     if (rxbuf[0] == 0x03) //Чтение блока
     {
+      lastCommand = millis();
+
       currentblock = rxbuf[1];
       success = nfc.mifareclassic_ReadDataBlock(currentblock, data);
 
@@ -227,6 +237,8 @@ void loop(void)
 
     if (rxbuf[0] == 0x04) //Запись блока
     {
+      lastCommand = millis();
+
       if (recEnabled)
       {
         currentblock = rxbuf[1];
