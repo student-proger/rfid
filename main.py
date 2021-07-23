@@ -37,6 +37,8 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
         self.pushButton.clicked.connect(self.buttonReadUID)
         self.pushButton_2.clicked.connect(self.buttonReadDump)
         self.textEdit.setReadOnly(True)
+        self.textEdit.setFont(QFont("Consolas", 10))
+        self.progressBar.setVisible(False)
 
         self.card = rfidCard(vid = 0x1EAF, pid = 0x0030)
 
@@ -61,13 +63,18 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
             return
         res = list(map(tohex, res))
         self.label.setText(" ".join(res))
-        s = " ".join(res) + '<br>'
+        s = "UID: " + " ".join(res) + "<br>"
+        #s = s + "---------------------------------------------------<br>"
 
         self.keysa = []
         self.keysb = []
+
+        self.progressBar.setVisible(True)
+        self.progressBar.setMaximum(15)
         keys = keyHelper()
         # Цикл по секторам RFID карты. В каждой итерации пробуем подобрать пару ключей (A/B) из словаря.
         for i in range(0, 16):
+            self.progressBar.setValue(i)
             keys.reset()
             while not keys.end():
                 currentKey = keys.get()
@@ -114,11 +121,18 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
             if item != None:
                 flag = True
 
+        self.progressBar.setMaximum(63)
+
         if flag:
             for block in range(0, 64):
+                self.progressBar.setValue(block)
                 nokey = False
                 sector = self.card.sectorOfBlock(block)
                 if self.card.isFirstBlock(block):
+                    sectorstr = str(sector)
+                    if sector < 10:
+                        sectorstr = "0" + sectorstr
+                    s = s + "---- Sector " + sectorstr + " ------------------------------------<br>"
                     if self.keysb[sector] != None:
                         res = self.card.authBlock(block, keys.keyToList(self.keysb[sector]), KEYB)
                     elif self.keysa[sector] != None:
@@ -127,14 +141,18 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                         # Нет ключей для сектора
                         nokey = True
                 if not nokey:
+                    blockstr = str(block)
+                    if block < 10:
+                        blockstr = "0" + blockstr
+
                     res = list(map(tohex, self.card.readBlock(block)))
                     if res == None:
-                        s = s + str(block) + ": Ошибка чтения блока" + "<br>"
+                        s = s + blockstr + ": Ошибка чтения блока" + "<br>"
                         return
-                    s = s + str(block) + ": " + " ".join(res) + "<br>"
-
+                    s = s + blockstr + ": " + " ".join(res) + "<br>"
 
         self.textEdit.setHtml(s)
+        self.progressBar.setVisible(False)
         del(keys)
 
     
