@@ -27,9 +27,11 @@ def tohex(dec):
 class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
     """ Класс главного окна приложения """
 
-    #Списки ключей для каждого сектора
+    # Списки ключей для каждого сектора
     keysa = []
     keysb = []
+    # Дамп считанных данных
+    dump = []
 
     def __init__(self):
         super().__init__()
@@ -68,6 +70,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
 
         self.keysa = []
         self.keysb = []
+        self.dump = []
 
         self.progressBar.setVisible(True)
         self.progressBar.setMaximum(15)
@@ -129,10 +132,6 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                 nokey = False
                 sector = self.card.sectorOfBlock(block)
                 if self.card.isFirstBlock(block):
-                    sectorstr = str(sector)
-                    if sector < 10:
-                        sectorstr = "0" + sectorstr
-                    s = s + "---- Sector " + sectorstr + " ------------------------------------<br>"
                     if self.keysa[sector] != None:
                         res = self.card.authBlock(block, keys.keyToList(self.keysa[sector]), KEYA)
                     elif self.keysb[sector] != None:
@@ -141,17 +140,34 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                         # Нет ключей для сектора
                         nokey = True
                 if not nokey:
-                    blockstr = str(block)
-                    if block < 10:
-                        blockstr = "0" + blockstr
-
-                    res = list(map(tohex, self.card.readBlock(block)))
+                    res = self.card.readBlock(block)
                     if res == None:
-                        s = s + blockstr + ": Ошибка чтения блока" + "<br>"
+                        self.dump.append(None)
                         return
-                    s = s + blockstr + ": " + " ".join(res) + "<br>"
+                    self.dump.append(res)
 
-        self.textEdit.setHtml(s)
+            print(self.dump)
+
+            for block in range(0, 64):
+                sector = self.card.sectorOfBlock(block)
+                if self.card.isFirstBlock(block):
+                    sectorstr = str(sector)
+                    if sector < 10:
+                        sectorstr = "0" + sectorstr
+                    s = s + "---- Sector " + sectorstr + " ------------------------------------<br>"
+
+                blockstr = str(block)
+                if block < 10:
+                    blockstr = "0" + blockstr
+
+                if self.dump[block] != None:
+                    ds = list(map(tohex, self.dump[block]))
+                    s = s + blockstr + ": " + " ".join(ds) + "<br>"
+                else:
+                    s = s + blockstr + ": Ошибка чтения блока" + "<br>"
+
+            self.textEdit.setHtml(s)
+        
         self.progressBar.setVisible(False)
         del(keys)
 
