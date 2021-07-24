@@ -162,9 +162,19 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
 
                 if self.dump[block] != None:
                     ds = list(map(tohex, self.dump[block]))
-                    s = s + blockstr + ": " + " ".join(ds) + "<br>"
+                    if block == 0:
+                        ss = blockstr + ': <font color="#FF1493">' + " ".join(ds)
+                        ss = ss + "</font>"
+                    elif self.card.isLastBlock(block):
+                        ss = blockstr + ': <font color="#3CB043">' + " ".join(ds[0:6]) + '</font>'
+                        ss = ss + ' <font color="#FF0000">' + " ".join(ds[6:9]) + '</font> '
+                        ss = ss + ds[9]
+                        ss = ss + ' <font color="#3CB043">' + " ".join(ds[10:16]) + '</font>'
+                    else:
+                        ss = blockstr + ": " + " ".join(ds)
                 else:
-                    s = s + blockstr + ": Ошибка чтения блока" + "<br>"
+                    ss = blockstr + ": Ошибка чтения блока"
+                s = s + ss + "<br>"
 
             self.textEdit.setHtml(s)
         
