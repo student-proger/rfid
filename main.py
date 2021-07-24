@@ -146,6 +146,18 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                         return
                     self.dump.append(res)
 
+            for sector in range(0, 16):
+                block = self.card.blockOfSector(sector) + 3
+                temp = []
+                temp = self.dump[block][:]
+                self.dump[block] = []
+                for i in range(0, 6):
+                    self.dump[block].append(keys.keyToList(self.keysa[sector])[i])
+                for i in range(6, 10):
+                    self.dump[block].append(temp[i])
+                for i in range(0, 6):
+                    self.dump[block].append(keys.keyToList(self.keysb[sector])[i])
+
             print(self.dump)
 
             for block in range(0, 64):
