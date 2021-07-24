@@ -27,9 +27,11 @@ def tohex(dec):
 class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
     """ Класс главного окна приложения """
 
-    #Списки ключей для каждого сектора
+    # Списки ключей для каждого сектора
     keysa = []
     keysb = []
+    # Дамп считанных данных
+    dump = []
 
     def __init__(self):
         super().__init__()
@@ -37,6 +39,8 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
         self.pushButton.clicked.connect(self.buttonReadUID)
         self.pushButton_2.clicked.connect(self.buttonReadDump)
         self.textEdit.setReadOnly(True)
+        self.textEdit.setFont(QFont("Consolas", 10))
+        self.progressBar.setVisible(False)
 
         self.card = rfidCard(vid = 0x1EAF, pid = 0x0030)
 
@@ -61,13 +65,19 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
             return
         res = list(map(tohex, res))
         self.label.setText(" ".join(res))
-        s = " ".join(res) + '<br>'
+        s = "UID: " + " ".join(res) + "<br>"
+        #s = s + "---------------------------------------------------<br>"
 
         self.keysa = []
         self.keysb = []
+        self.dump = []
+
+        self.progressBar.setVisible(True)
+        self.progressBar.setMaximum(15)
         keys = keyHelper()
         # Цикл по секторам RFID карты. В каждой итерации пробуем подобрать пару ключей (A/B) из словаря.
         for i in range(0, 16):
+            self.progressBar.setValue(i)
             keys.reset()
             while not keys.end():
                 currentKey = keys.get()
@@ -114,27 +124,51 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
             if item != None:
                 flag = True
 
+        self.progressBar.setMaximum(63)
+
         if flag:
             for block in range(0, 64):
+                self.progressBar.setValue(block)
                 nokey = False
                 sector = self.card.sectorOfBlock(block)
                 if self.card.isFirstBlock(block):
-                    if self.keysb[sector] != None:
-                        res = self.card.authBlock(block, keys.keyToList(self.keysb[sector]), KEYB)
-                    elif self.keysa[sector] != None:
+                    if self.keysa[sector] != None:
                         res = self.card.authBlock(block, keys.keyToList(self.keysa[sector]), KEYA)
+                    elif self.keysb[sector] != None:
+                        res = self.card.authBlock(block, keys.keyToList(self.keysb[sector]), KEYB)
                     else:
                         # Нет ключей для сектора
                         nokey = True
                 if not nokey:
-                    res = list(map(tohex, self.card.readBlock(block)))
+                    res = self.card.readBlock(block)
                     if res == None:
-                        s = s + str(block) + ": Ошибка чтения блока" + "<br>"
+                        self.dump.append(None)
                         return
-                    s = s + str(block) + ": " + " ".join(res) + "<br>"
+                    self.dump.append(res)
 
+            print(self.dump)
 
-        self.textEdit.setHtml(s)
+            for block in range(0, 64):
+                sector = self.card.sectorOfBlock(block)
+                if self.card.isFirstBlock(block):
+                    sectorstr = str(sector)
+                    if sector < 10:
+                        sectorstr = "0" + sectorstr
+                    s = s + "---- Sector " + sectorstr + " ------------------------------------<br>"
+
+                blockstr = str(block)
+                if block < 10:
+                    blockstr = "0" + blockstr
+
+                if self.dump[block] != None:
+                    ds = list(map(tohex, self.dump[block]))
+                    s = s + blockstr + ": " + " ".join(ds) + "<br>"
+                else:
+                    s = s + blockstr + ": Ошибка чтения блока" + "<br>"
+
+            self.textEdit.setHtml(s)
+        
+        self.progressBar.setVisible(False)
         del(keys)
 
     

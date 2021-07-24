@@ -99,6 +99,7 @@ class rfidCard():
         if self.rawdata[0] != 0xAC:
             return None
         else:
+            del(self.rawdata[0])
             return self.rawdata
 
     def isFirstBlock(self, n):
