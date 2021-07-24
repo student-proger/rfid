@@ -133,10 +133,10 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                     if sector < 10:
                         sectorstr = "0" + sectorstr
                     s = s + "---- Sector " + sectorstr + " ------------------------------------<br>"
-                    if self.keysb[sector] != None:
-                        res = self.card.authBlock(block, keys.keyToList(self.keysb[sector]), KEYB)
-                    elif self.keysa[sector] != None:
+                    if self.keysa[sector] != None:
                         res = self.card.authBlock(block, keys.keyToList(self.keysa[sector]), KEYA)
+                    elif self.keysb[sector] != None:
+                        res = self.card.authBlock(block, keys.keyToList(self.keysb[sector]), KEYB)
                     else:
                         # Нет ключей для сектора
                         nokey = True
