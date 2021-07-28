@@ -2,9 +2,6 @@
 Модуль для работы с RFID картами
 """
 
-# Для отладки без картридера
-FAKECARD = False
-
 from hidDevice import hidDevice
 
 # Константы для указания типа ключа
@@ -29,8 +26,6 @@ class rfidCard():
 
     def readUID(self):
         """ Чтение UID карты """
-        if FAKECARD:
-            return [0xDD] * 4
         self.waitdata = True
         self.hid.writeHID([0x01])
         while self.waitdata:
@@ -47,25 +42,6 @@ class rfidCard():
         """ Аутентификация блока номер n с помощью ключа key.
         key_type = KEYA / KEYB
         """
-        if FAKECARD:
-            if n < 8:
-                if key_type == KEYA:
-                    k = [0xD3, 0xF7, 0xD3, 0xF7, 0xD3, 0xF7]
-                else:
-                    k = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]
-            else:
-                k = [0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5]
-            ok = True
-            for i in range(0, 6):
-                if key[i] != k[i]:
-                    ok = False
-                    break
-            if ok:
-                return True
-            else:
-                return False
-
-
         buf = [0x02, key_type]
         for item in key:
             buf.append(item)
@@ -83,12 +59,6 @@ class rfidCard():
 
     def readBlock(self, n):
         """ Чтение блока с номером n """
-        if FAKECARD:
-            r = []
-            for i in range(0, 16):
-                r.append(i)
-            return r
-
         buf = [0x03, n]
 
         self.waitdata = True

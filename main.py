@@ -146,6 +146,18 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                         return
                     self.dump.append(res)
 
+            for sector in range(0, 16):
+                block = self.card.blockOfSector(sector) + 3
+                temp = []
+                temp = self.dump[block][:]
+                self.dump[block] = []
+                for i in range(0, 6):
+                    self.dump[block].append(keys.keyToList(self.keysa[sector])[i])
+                for i in range(6, 10):
+                    self.dump[block].append(temp[i])
+                for i in range(0, 6):
+                    self.dump[block].append(keys.keyToList(self.keysb[sector])[i])
+
             print(self.dump)
 
             for block in range(0, 64):
@@ -162,9 +174,19 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
 
                 if self.dump[block] != None:
                     ds = list(map(tohex, self.dump[block]))
-                    s = s + blockstr + ": " + " ".join(ds) + "<br>"
+                    if block == 0:
+                        ss = blockstr + ': <font color="#FF1493">' + " ".join(ds)
+                        ss = ss + "</font>"
+                    elif self.card.isLastBlock(block):
+                        ss = blockstr + ': <font color="#3CB043">' + " ".join(ds[0:6]) + '</font>'
+                        ss = ss + ' <font color="#FF0000">' + " ".join(ds[6:9]) + '</font> '
+                        ss = ss + ds[9]
+                        ss = ss + ' <font color="#3CB043">' + " ".join(ds[10:16]) + '</font>'
+                    else:
+                        ss = blockstr + ": " + " ".join(ds)
                 else:
-                    s = s + blockstr + ": Ошибка чтения блока" + "<br>"
+                    ss = blockstr + ": Ошибка чтения блока"
+                s = s + ss + "<br>"
 
             self.textEdit.setHtml(s)
         
