@@ -184,6 +184,19 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                         ss = ss + ' <font color="#3CB043">' + " ".join(ds[10:16]) + '</font>'
                     else:
                         ss = blockstr + ": " + " ".join(ds)
+
+                    dd = []
+                    for item in self.dump[block]:
+                        if (item >= 32 and item <= 126) or item >= 184:
+                            dd.append(item)
+                        else:
+                            dd.append(183)
+
+                    ch = list(map(chr, dd))
+                    sch = "".join(ch)
+                    sch = sch.replace(" ", "&nbsp;")
+                    ss = ss + "&nbsp;&nbsp;&nbsp;&nbsp;" + sch
+
                 else:
                     ss = blockstr + ": Ошибка чтения блока"
                 s = s + ss + "<br>"
