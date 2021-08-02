@@ -72,6 +72,22 @@ class rfidCard():
             del(self.rawdata[0])
             return self.rawdata
 
+    def writeBlock(self, n, data):
+        """ Запись блока с номером n """
+        buf = [0x04, n]
+        for item in data:
+            buf.append(item)
+
+        self.waitdata = True
+        self.hid.writeHID(buf)
+        while self.waitdata:
+            pass
+
+        if self.rawdata[0] != 0xAD:
+            return False
+        else:
+            return True
+
     def isFirstBlock(self, n):
         """ Проверка, что это первый блок сектора """
         if n % 4 == 0:
