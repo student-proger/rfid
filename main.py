@@ -48,14 +48,30 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
         del(self.card)
 
     def buttonReadUID(self):
-        res = self.card.readUID()
+        """res = self.card.readUID()
         if res == None:
             self.label.setText("Ошибка чтения")
             return
 
         res = list(map(tohex, res))
         self.label.setText(" ".join(res))
-        self.textEdit.setHtml("")
+        self.textEdit.setHtml("")"""
+
+        res = self.card.readUID()
+        if res == None:
+            self.label.setText("Ошибка чтения")
+            return
+
+        res = self.card.authBlock(18, [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF], KEYB)
+        if res:
+            if self.card.writeBlock(18, [0x01, 0x02, 0x03, 0x04, 0x05, 0xEE, 0xEE, 0xEE, 0xEE, 0xEE, 0xEE, 0xEE, 0xEE, 0xEE, 0xEE, 0xEE]):
+                self.label.setText("Запись успешна")
+            else:
+                self.label.setText("Ошибка записи")
+        else:
+            self.label.setText("Ошибка аутентификации")
+
+
 
     def buttonReadDump(self):
         res = self.card.readUID()
@@ -184,6 +200,19 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                         ss = ss + ' <font color="#3CB043">' + " ".join(ds[10:16]) + '</font>'
                     else:
                         ss = blockstr + ": " + " ".join(ds)
+
+                    dd = []
+                    for item in self.dump[block]:
+                        if (item >= 32 and item <= 126) or item >= 184:
+                            dd.append(item)
+                        else:
+                            dd.append(183)
+
+                    ch = list(map(chr, dd))
+                    sch = "".join(ch)
+                    sch = sch.replace(" ", "&nbsp;")
+                    ss = ss + "&nbsp;&nbsp;&nbsp;&nbsp;" + sch
+
                 else:
                     ss = blockstr + ": Ошибка чтения блока"
                 s = s + ss + "<br>"

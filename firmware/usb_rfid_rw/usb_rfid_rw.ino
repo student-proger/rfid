@@ -59,8 +59,6 @@ uint8_t currentblock;                     // Counter to keep track of which bloc
 bool authenticated = false;               // Flag to indicate if the sector is authenticated
 uint8_t data[16];                         // Array to store block data during reads
 
-bool recEnabled = false;  //Запись разрешена
-
 // Keyb on NDEF and Mifare Classic should be the same
 uint8_t keyuniversal[6] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 
@@ -216,51 +214,25 @@ void loop(void)
       }
     }
 
-    if (rxbuf[0] == 0xAA) //Разрешение записи
-    {
-      //AA CC FC E8 1A B0 EE 57
-      uint8_t recEnableTemplate[8] = {0xAA, 0xCC, 0xFC, 0xE8, 0x1A, 0xB0, 0xEE, 0x57};
-      bool ok = true;
-      for (int i=0; i<8; i++)
-      {
-        if (rxbuf[i] != recEnableTemplate[i])
-        {
-          ok = false;
-        }
-      }
-      if (ok)
-      {
-        recEnabled = true;
-      }
-
-    }
-
     if (rxbuf[0] == 0x04) //Запись блока
     {
       lastCommand = millis();
 
-      if (recEnabled)
+      currentblock = rxbuf[1];
+      for (int i=0; i<16; i++)
       {
-        currentblock = rxbuf[1];
-        for (int i=0; i<8; i++)
-        {
-          data[i] = rxbuf[i+1];
-        }
+        data[i] = rxbuf[i+2];
+      }
 
-        success = nfc.mifareclassic_WriteDataBlock(currentblock, data);
+      success = nfc.mifareclassic_WriteDataBlock(currentblock, data);
 
-        if (success)
-        {
-          txbuf[0] = 0xAD;
-        }
-        else
-        {
-          txbuf[0] = 0xFA;
-        }
+      if (success)
+      {
+        txbuf[0] = 0xAD;
       }
       else
       {
-        txbuf[0] = 0xEA;
+        txbuf[0] = 0xFA;
       }
     }
 
