@@ -148,7 +148,7 @@ void loop(void)
       {
         if (millis() - lastCommand > 1000)
         {
-          tone(ZOOMMER_PIN, 1000);
+          //tone(ZOOMMER_PIN, 1000);
           zoommerTime = millis();
           zoommerActive = true;
           lastCommand = millis();
