@@ -100,6 +100,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                 res = self.card.authBlock(self.card.blockOfSector(i), keys.keyToList(currentKey), KEYA)
                 print("A:", currentKey, self.card.blockOfSector(i), res)
                 if res:
+                    # Успешно найден ключ
                     self.keysa.append(currentKey)
                     break
                 else:
@@ -117,6 +118,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                 res = self.card.authBlock(self.card.blockOfSector(i), keys.keyToList(currentKey), KEYB)
                 print("B:", currentKey, self.card.blockOfSector(i), res)
                 if res:
+                    # Успешно найден ключ
                     self.keysb.append(currentKey)
                     break
                 else:
@@ -131,7 +133,18 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
         print("KEY A: ", self.keysa)
         print("KEY B: ", self.keysb)
 
-        # Проверяем, есть ли смысл пытаться прочитать карту
+        # Вывод ключей в таблицу на форме
+        self.keyTable.clear()
+        self.keyTable.setRowCount(16)
+        self.keyTable.setHorizontalHeaderLabels(["KEY A", "KEY B"])
+        self.keyTable.setVerticalHeaderLabels(list(map(str, [i for i in range(0, 16)])))
+        for i in range(0, 16):
+            self.keyTable.setItem(i, 0, QTableWidgetItem(self.keysa[i]))
+            self.keyTable.setItem(i, 1, QTableWidgetItem(self.keysb[i]))
+
+
+        # Проверяем, есть ли смысл пытаться прочитать карту. Для этого нужно, чтобы
+        # хотя бы для одного сектора был подобран один из ключей. 
         flag = False
         for item in self.keysa:
             if item != None:

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>849</width>
+    <width>872</width>
     <height>567</height>
    </rect>
   </property>
@@ -50,7 +50,7 @@
      <rect>
       <x>10</x>
       <y>70</y>
-      <width>671</width>
+      <width>551</width>
       <height>431</height>
      </rect>
     </property>
@@ -73,7 +73,7 @@
      <rect>
       <x>10</x>
       <y>500</y>
-      <width>671</width>
+      <width>551</width>
       <height>23</height>
      </rect>
     </property>
@@ -84,13 +84,33 @@
      <number>24</number>
     </property>
    </widget>
+   <widget class="QTableWidget" name="keyTable">
+    <property name="geometry">
+     <rect>
+      <x>570</x>
+      <y>70</y>
+      <width>291</width>
+      <height>431</height>
+     </rect>
+    </property>
+    <column>
+     <property name="text">
+      <string>KEY A</string>
+     </property>
+    </column>
+    <column>
+     <property name="text">
+      <string>KEY B</string>
+     </property>
+    </column>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>849</width>
+     <width>872</width>
      <height>21</height>
     </rect>
    </property>
