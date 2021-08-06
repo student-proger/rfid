@@ -8,6 +8,13 @@ from hidDevice import hidDevice
 KEYA = 0x00
 KEYB = 0x01
 
+#Типы блоков
+TB_SECTOR_TRAILER = 0x00
+TB_DATABLOCK_0 = 0x01
+TB_DATABLOCK_1 = 0x02
+TB_DATABLOCK_2 = 0x03
+TB_UID = 0x04
+
 class rfidCard():
     def __init__(self, vid, pid):
         """ Конструктор класса. Принимает VID и PID картридера """
@@ -101,6 +108,19 @@ class rfidCard():
             return True
         else:
             return False
+
+    def getTypeOfBlock(self, n):
+        """ Возвращает тип блока по его номеру """
+        if n == 0:
+            return TB_UID
+        elif n % 4 == 0:
+            return TB_DATABLOCK_0
+        elif n % 4 == 1:
+            return TB_DATABLOCK_1
+        elif n % 4 == 2:
+            return TB_DATABLOCK_2
+        elif n % 4 == 3:
+            return TB_SECTOR_TRAILER
 
     def sectorOfBlock(self, n):
         """ Возвращает номер сектора по номеру блока """
