@@ -46,6 +46,9 @@ class Ui_MainWindow(object):
         self.keyTable.setHorizontalHeaderItem(0, item)
         item = QtWidgets.QTableWidgetItem()
         self.keyTable.setHorizontalHeaderItem(1, item)
+        self.pushButton_3 = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_3.setGeometry(QtCore.QRect(310, 10, 101, 23))
+        self.pushButton_3.setObjectName("pushButton_3")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 872, 21))
@@ -63,8 +66,14 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.pushButton.setText(_translate("MainWindow", "Чтение UID"))
         self.label.setText(_translate("MainWindow", "TextLabel"))
+        self.textEdit.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:8.25pt; font-weight:400; font-style:normal;\">\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p></body></html>"))
         self.pushButton_2.setText(_translate("MainWindow", "Чтение дампа"))
         item = self.keyTable.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "KEY A"))
         item = self.keyTable.horizontalHeaderItem(1)
         item.setText(_translate("MainWindow", "KEY B"))
+        self.pushButton_3.setText(_translate("MainWindow", "Права доступа"))

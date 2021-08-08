@@ -190,19 +190,19 @@ class rfidCard():
         c3 = accessBits[2] & 0x01
 
         if c1 and c2 and c3:
-            q = [None, None, None, None]
+            q = [0, 0, 0, 0]
         elif c1 and (not c2) and c3:
-            q = [KEYB, None, None, None]
+            q = [KEYB, 0, 0, 0]
         elif (not c1) and (c2) and c3:
-            q = [KEYB, KEYB, None, None]
+            q = [KEYB, KEYB, 0, 0]
         elif (not c1) and (not c2) and (c3):
-            q = [KEYAB, None, None, KEYAB]
+            q = [KEYAB, 0, 0, KEYAB]
         elif (c1) and (c2) and (not c3):
             q = [KEYAB, KEYB, KEYB, KEYAB]
         elif (c1) and (not c2) and (not c3):
-            q = [KEYAB, KEYB, None, None]
+            q = [KEYAB, KEYB, 0, 0]
         elif (not c1) and (c2) and (not c3):
-            q = [KEYAB, None, None, None]
+            q = [KEYAB, 0, 0, 0]
         elif (not c1) and (not c2) and (not c3):
             q = [KEYAB, KEYAB, KEYAB, KEYAB] # transport configuration
 
@@ -213,19 +213,19 @@ class rfidCard():
         c3 = (accessBits[2] & 0x02) >> 1
 
         if c1 and c2 and c3:
-            q = [None, None, None, None]
+            q = [0, 0, 0, 0]
         elif c1 and (not c2) and c3:
-            q = [KEYB, None, None, None]
+            q = [KEYB, 0, 0, 0]
         elif (not c1) and (c2) and c3:
-            q = [KEYB, KEYB, None, None]
+            q = [KEYB, KEYB, 0, 0]
         elif (not c1) and (not c2) and (c3):
-            q = [KEYAB, None, None, KEYAB]
+            q = [KEYAB, 0, 0, KEYAB]
         elif (c1) and (c2) and (not c3):
             q = [KEYAB, KEYB, KEYB, KEYAB]
         elif (c1) and (not c2) and (not c3):
-            q = [KEYAB, KEYB, None, None]
+            q = [KEYAB, KEYB, 0, 0]
         elif (not c1) and (c2) and (not c3):
-            q = [KEYAB, None, None, None]
+            q = [KEYAB, 0, 0, 0]
         elif (not c1) and (not c2) and (not c3):
             q = [KEYAB, KEYAB, KEYAB, KEYAB] # transport configuration
 
@@ -236,19 +236,19 @@ class rfidCard():
         c3 = (accessBits[2] & 0x04) >> 2
 
         if c1 and c2 and c3:
-            q = [None, None, None, None]
+            q = [0, 0, 0, 0]
         elif c1 and (not c2) and c3:
-            q = [KEYB, None, None, None]
+            q = [KEYB, 0, 0, 0]
         elif (not c1) and (c2) and c3:
-            q = [KEYB, KEYB, None, None]
+            q = [KEYB, KEYB, 0, 0]
         elif (not c1) and (not c2) and (c3):
-            q = [KEYAB, None, None, KEYAB]
+            q = [KEYAB, 0, 0, KEYAB]
         elif (c1) and (c2) and (not c3):
             q = [KEYAB, KEYB, KEYB, KEYAB]
         elif (c1) and (not c2) and (not c3):
-            q = [KEYAB, KEYB, None, None]
+            q = [KEYAB, KEYB, 0, 0]
         elif (not c1) and (c2) and (not c3):
-            q = [KEYAB, None, None, None]
+            q = [KEYAB, 0, 0, 0]
         elif (not c1) and (not c2) and (not c3):
             q = [KEYAB, KEYAB, KEYAB, KEYAB] # transport configuration
 
@@ -259,26 +259,109 @@ class rfidCard():
         c3 = (accessBits[2] & 0x08) >> 3
 
         if c1 and c2 and c3:
-            self.__actrailer = [None, None, KEYAB, None, None, None]
+            self.__actrailer = [0, 0, KEYAB, 0, 0, 0]
         elif c1 and (not c2) and c3:
-            self.__actrailer = [None, None, KEYAB, KEYB, None, None]
+            self.__actrailer = [0, 0, KEYAB, KEYB, 0, 0]
         elif (not c1) and (c2) and c3:
-            self.__actrailer = [None, KEYB, KEYAB, KEYB, None, KEYB]
+            self.__actrailer = [0, KEYB, KEYAB, KEYB, 0, KEYB]
         elif (not c1) and (not c2) and (c3):
-            self.__actrailer = [None, KEYA, KEYA, KEYA, KEYA, KEYA] # Key B may be read, transport configuration
+            self.__actrailer = [0, KEYA, KEYA, KEYA, KEYA, KEYA] # Key B may be read, transport configuration
         elif (c1) and (c2) and (not c3):
-            self.__actrailer = [None, None, KEYAB, None, None, None]
+            self.__actrailer = [0, 0, KEYAB, 0, 0, 0]
         elif (c1) and (not c2) and (not c3):
-            self.__actrailer = [None, KEYB, KEYAB, None, None, KEYB]
+            self.__actrailer = [0, KEYB, KEYAB, 0, 0, KEYB]
         elif (not c1) and (c2) and (not c3):
-            self.__actrailer = [None, None, KEYA, None, KEYA, None] # Key B may be read
+            self.__actrailer = [0, 0, KEYA, 0, KEYA, 0] # Key B may be read
         elif (not c1) and (not c2) and (not c3):
-            self.__actrailer = [None, KEYA, KEYA, None, KEYA, KEYA] # Key B may be read
+            self.__actrailer = [0, KEYA, KEYA, 0, KEYA, KEYA] # Key B may be read
 
         #print(self.__acdata)
         #print(self.__actrailer)
 
     def canReadBlock(self, block, key):
         """ Возвращает True, если с помощью ключа (KEYA/KEYB) можно прочитать блок. """
-        pass
-        #self.__fillAccessMatrix()
+        if self.getTypeOfBlock(block) == TB_SECTOR_TRAILER: # это трейлер сектора, к нему нельзя применить эту функцию
+            return
+        self.__fillAccessMatrix(self.getAccessBits(self.sectorOfBlock(block)))
+        blk = block % 4
+        ac = self.__acdata[blk]
+        if ac[0] & key == 0:
+            return False
+        else:
+            return True
+
+    def canWriteBlock(self, block, key):
+        """ Возвращает True, если с помощью ключа (KEYA/KEYB) можно писать в блок. """
+        if self.getTypeOfBlock(block) == TB_SECTOR_TRAILER: # это трейлер сектора, к нему нельзя применить эту функцию
+            return
+        self.__fillAccessMatrix(self.getAccessBits(self.sectorOfBlock(block)))
+        blk = block % 4
+        ac = self.__acdata[blk]
+        if ac[1] & key == 0:
+            return False
+        else:
+            return True
+
+    def canIncrementBlock(self, block, key):
+        """ Возвращает True, если с помощью ключа (KEYA/KEYB) можно инкрементировать блок. """
+        if self.getTypeOfBlock(block) == TB_SECTOR_TRAILER: # это трейлер сектора, к нему нельзя применить эту функцию
+            return
+        self.__fillAccessMatrix(self.getAccessBits(self.sectorOfBlock(block)))
+        blk = block % 4
+        ac = self.__acdata[blk]
+        if ac[2] & key == 0:
+            return False
+        else:
+            return True
+
+    def canDecrementBlock(self, block, key):
+        """ Возвращает True, если с помощью ключа (KEYA/KEYB) можно декрементировать блок. """
+        if self.getTypeOfBlock(block) == TB_SECTOR_TRAILER: # это трейлер сектора, к нему нельзя применить эту функцию
+            return
+        self.__fillAccessMatrix(self.getAccessBits(self.sectorOfBlock(block)))
+        blk = block % 4
+        ac = self.__acdata[blk]
+        if ac[2] & key == 0:
+            return False
+        else:
+            return True
+
+    def canWriteKEYA(self, sector, key):
+        """ Возвращает True, если с помощью ключа (KEYA/KEYB) можно записать KEYA выбранного сектора. """
+        self.__fillAccessMatrix(self.getAccessBits(sector))
+        if self.__actrailer[1] & key == 0:
+            return False
+        else:
+            return True
+
+    def canReadKEYB(self, sector, key):
+        """ Возвращает True, если с помощью ключа (KEYA/KEYB) можно прочитать KEYB выбранного сектора. """
+        self.__fillAccessMatrix(self.getAccessBits(sector))
+        if self.__actrailer[4] & key == 0:
+            return False
+        else:
+            return True
+
+    def canWriteKEYB(self, sector, key):
+        """ Возвращает True, если с помощью ключа (KEYA/KEYB) можно записать KEYB выбранного сектора. """
+        self.__fillAccessMatrix(self.getAccessBits(sector))
+        if self.__actrailer[5] & key == 0:
+            return False
+        else:
+            return True
+
+    def canReadAccessBits(self, sector, key):
+        """ Возвращает True, если с помощью ключа (KEYA/KEYB) можно прочитать биты доступа выбранного сектора. """
+        self.__fillAccessMatrix(self.getAccessBits(sector))
+        if self.__actrailer[2] & key == 0:
+            return False
+        else:
+            return True
+
+    def canWriteAccessBits(self, sector, key):
+        """ Возвращает True, если с помощью ключа (KEYA/KEYB) можно записать биты доступа выбранного сектора. """
+        self.__fillAccessMatrix(self.getAccessBits(sector))
+        if self.__actrailer[3] & key == 0:
+            return False
+        else:
+            return True

@@ -12,8 +12,11 @@ from PyQt5.QtCore import Qt, QRect
 # design
 import mainform
 
-from rfidCard import rfidCard, KEYA, KEYB
+from rfidCard import rfidCard
+from rfidCard import KEYA, KEYB, TB_SECTOR_TRAILER, TB_DATABLOCK_0, TB_DATABLOCK_1, TB_DATABLOCK_2, TB_UID
 from keyHelper import keyHelper
+
+from accessbitsunit import accessBitsForm
 
 def tohex(dec):
     """ Переводит десятичное число в 16-ричный вид с отбрасыванием `0x` """
@@ -22,7 +25,6 @@ def tohex(dec):
     if len(s) == 1:
         s = "0" + s
     return s
-
 
 class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
     """ Класс главного окна приложения """
@@ -36,6 +38,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
         self.setupUi(self)  # Это нужно для инициализации нашего дизайна
         self.pushButton.clicked.connect(self.buttonReadUID)
         self.pushButton_2.clicked.connect(self.buttonReadDump)
+        self.pushButton_3.clicked.connect(self.buttonViewAccessBits)
         self.textEdit.setReadOnly(True)
         self.textEdit.setFont(QFont("Consolas", 10))
         self.progressBar.setVisible(False)
@@ -44,6 +47,11 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
 
     def __del__(self):
         del(self.card)
+
+    def buttonViewAccessBits(self):
+        self.acbForm = accessBitsForm(self.card)
+        self.acbForm.exec_()
+
 
     def buttonReadUID(self):
         """res = self.card.readUID()
@@ -233,9 +241,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
         self.progressBar.setVisible(False)
         del(keys)
 
-        ac = self.card.getAccessBits(1)
-        print(ac)
-        #self.card.__fillAccessMatrix(ac)
+        print(self.card.canReadAccessBits(1, KEYA))
 
     
 
