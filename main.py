@@ -12,8 +12,11 @@ from PyQt5.QtCore import Qt, QRect
 # design
 import mainform
 
-from rfidCard import rfidCard, KEYA, KEYB
+from rfidCard import rfidCard
+from rfidCard import KEYA, KEYB, TB_SECTOR_TRAILER, TB_DATABLOCK_0, TB_DATABLOCK_1, TB_DATABLOCK_2, TB_UID
 from keyHelper import keyHelper
+
+from accessbitsunit import accessBitsForm
 
 def tohex(dec):
     """ Переводит десятичное число в 16-ричный вид с отбрасыванием `0x` """
@@ -23,21 +26,19 @@ def tohex(dec):
         s = "0" + s
     return s
 
-
 class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
     """ Класс главного окна приложения """
 
     # Списки ключей для каждого сектора
     keysa = []
     keysb = []
-    # Дамп считанных данных
-    dump = []
-
+    
     def __init__(self):
         super().__init__()
         self.setupUi(self)  # Это нужно для инициализации нашего дизайна
         self.pushButton.clicked.connect(self.buttonReadUID)
         self.pushButton_2.clicked.connect(self.buttonReadDump)
+        self.pushButton_3.clicked.connect(self.buttonViewAccessBits)
         self.textEdit.setReadOnly(True)
         self.textEdit.setFont(QFont("Consolas", 10))
         self.progressBar.setVisible(False)
@@ -46,6 +47,11 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
 
     def __del__(self):
         del(self.card)
+
+    def buttonViewAccessBits(self):
+        self.acbForm = accessBitsForm(self.card)
+        self.acbForm.exec_()
+
 
     def buttonReadUID(self):
         """res = self.card.readUID()
@@ -86,7 +92,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
 
         self.keysa = []
         self.keysb = []
-        self.dump = []
+        self.card.dump = []
 
         self.progressBar.setVisible(True)
         self.progressBar.setMaximum(15)
@@ -100,6 +106,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                 res = self.card.authBlock(self.card.blockOfSector(i), keys.keyToList(currentKey), KEYA)
                 print("A:", currentKey, self.card.blockOfSector(i), res)
                 if res:
+                    # Успешно найден ключ
                     self.keysa.append(currentKey)
                     break
                 else:
@@ -117,6 +124,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                 res = self.card.authBlock(self.card.blockOfSector(i), keys.keyToList(currentKey), KEYB)
                 print("B:", currentKey, self.card.blockOfSector(i), res)
                 if res:
+                    # Успешно найден ключ
                     self.keysb.append(currentKey)
                     break
                 else:
@@ -131,7 +139,18 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
         print("KEY A: ", self.keysa)
         print("KEY B: ", self.keysb)
 
-        # Проверяем, есть ли смысл пытаться прочитать карту
+        # Вывод ключей в таблицу на форме
+        self.keyTable.clear()
+        self.keyTable.setRowCount(16)
+        self.keyTable.setHorizontalHeaderLabels(["KEY A", "KEY B"])
+        self.keyTable.setVerticalHeaderLabels(list(map(str, [i for i in range(0, 16)])))
+        for i in range(0, 16):
+            self.keyTable.setItem(i, 0, QTableWidgetItem(self.keysa[i]))
+            self.keyTable.setItem(i, 1, QTableWidgetItem(self.keysb[i]))
+
+
+        # Проверяем, есть ли смысл пытаться прочитать карту. Для этого нужно, чтобы
+        # хотя бы для одного сектора был подобран один из ключей. 
         flag = False
         for item in self.keysa:
             if item != None:
@@ -158,23 +177,23 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                 if not nokey:
                     res = self.card.readBlock(block)
                     if res == None:
-                        self.dump.append(None)
+                        self.card.dump.append(None)
                         return
-                    self.dump.append(res)
+                    self.card.dump.append(res)
 
             for sector in range(0, 16):
                 block = self.card.blockOfSector(sector) + 3
                 temp = []
-                temp = self.dump[block][:]
-                self.dump[block] = []
+                temp = self.card.dump[block][:]
+                self.card.dump[block] = []
                 for i in range(0, 6):
-                    self.dump[block].append(keys.keyToList(self.keysa[sector])[i])
+                    self.card.dump[block].append(keys.keyToList(self.keysa[sector])[i])
                 for i in range(6, 10):
-                    self.dump[block].append(temp[i])
+                    self.card.dump[block].append(temp[i])
                 for i in range(0, 6):
-                    self.dump[block].append(keys.keyToList(self.keysb[sector])[i])
+                    self.card.dump[block].append(keys.keyToList(self.keysb[sector])[i])
 
-            print(self.dump)
+            print(self.card.dump)
 
             for block in range(0, 64):
                 sector = self.card.sectorOfBlock(block)
@@ -188,8 +207,8 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                 if block < 10:
                     blockstr = "0" + blockstr
 
-                if self.dump[block] != None:
-                    ds = list(map(tohex, self.dump[block]))
+                if self.card.dump[block] != None:
+                    ds = list(map(tohex, self.card.dump[block]))
                     if block == 0:
                         ss = blockstr + ': <font color="#FF1493">' + " ".join(ds)
                         ss = ss + "</font>"
@@ -202,7 +221,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                         ss = blockstr + ": " + " ".join(ds)
 
                     dd = []
-                    for item in self.dump[block]:
+                    for item in self.card.dump[block]:
                         if (item >= 32 and item <= 126) or item >= 184:
                             dd.append(item)
                         else:
@@ -221,6 +240,8 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
         
         self.progressBar.setVisible(False)
         del(keys)
+
+        print(self.card.canReadAccessBits(1, KEYA))
 
     
 
