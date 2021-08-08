@@ -30,9 +30,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
     # Списки ключей для каждого сектора
     keysa = []
     keysb = []
-    # Дамп считанных данных
-    dump = []
-
+    
     def __init__(self):
         super().__init__()
         self.setupUi(self)  # Это нужно для инициализации нашего дизайна
@@ -86,7 +84,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
 
         self.keysa = []
         self.keysb = []
-        self.dump = []
+        self.card.dump = []
 
         self.progressBar.setVisible(True)
         self.progressBar.setMaximum(15)
@@ -171,23 +169,23 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                 if not nokey:
                     res = self.card.readBlock(block)
                     if res == None:
-                        self.dump.append(None)
+                        self.card.dump.append(None)
                         return
-                    self.dump.append(res)
+                    self.card.dump.append(res)
 
             for sector in range(0, 16):
                 block = self.card.blockOfSector(sector) + 3
                 temp = []
-                temp = self.dump[block][:]
-                self.dump[block] = []
+                temp = self.card.dump[block][:]
+                self.card.dump[block] = []
                 for i in range(0, 6):
-                    self.dump[block].append(keys.keyToList(self.keysa[sector])[i])
+                    self.card.dump[block].append(keys.keyToList(self.keysa[sector])[i])
                 for i in range(6, 10):
-                    self.dump[block].append(temp[i])
+                    self.card.dump[block].append(temp[i])
                 for i in range(0, 6):
-                    self.dump[block].append(keys.keyToList(self.keysb[sector])[i])
+                    self.card.dump[block].append(keys.keyToList(self.keysb[sector])[i])
 
-            print(self.dump)
+            print(self.card.dump)
 
             for block in range(0, 64):
                 sector = self.card.sectorOfBlock(block)
@@ -201,8 +199,8 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                 if block < 10:
                     blockstr = "0" + blockstr
 
-                if self.dump[block] != None:
-                    ds = list(map(tohex, self.dump[block]))
+                if self.card.dump[block] != None:
+                    ds = list(map(tohex, self.card.dump[block]))
                     if block == 0:
                         ss = blockstr + ': <font color="#FF1493">' + " ".join(ds)
                         ss = ss + "</font>"
@@ -215,7 +213,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                         ss = blockstr + ": " + " ".join(ds)
 
                     dd = []
-                    for item in self.dump[block]:
+                    for item in self.card.dump[block]:
                         if (item >= 32 and item <= 126) or item >= 184:
                             dd.append(item)
                         else:
@@ -235,7 +233,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
         self.progressBar.setVisible(False)
         del(keys)
 
-        ac = self.card.getAccessBits(self.dump, 1)
+        ac = self.card.getAccessBits(1)
         print(ac)
         #self.card.__fillAccessMatrix(ac)
 

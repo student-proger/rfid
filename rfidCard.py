@@ -17,6 +17,9 @@ TB_DATABLOCK_2 = 0x03
 TB_UID = 0x04
 
 class rfidCard():
+    # Дамп считанных данных
+    dump = []
+
     def __init__(self, vid, pid):
         """ Конструктор класса. Принимает VID и PID картридера """
         self.hid = hidDevice(vid, pid, callback = self.callback)
@@ -131,7 +134,7 @@ class rfidCard():
         """ Возвращает номер первого блока в секторе n """
         return n * 4
 
-    def getAccessBits(self, dump, sector):
+    def getAccessBits(self, sector):
         """ Возвращает биты доступа для сектора.
 
         +-----------------------------+--------------+----+-----------------------------+
@@ -142,8 +145,8 @@ class rfidCard():
         +-----------------------------+--------------+----+-----------------------------+
         """
         block = self.blockOfSector(sector) + 3
-        b23 = dump[block][8]
-        b1 = dump[block][7]
+        b23 = self.dump[block][8]
+        b1 = self.dump[block][7]
         c1 = b1 >> 4
         c3 = b23 >> 4
         c2 = b23 & 0x0F
