@@ -235,6 +235,10 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
         self.progressBar.setVisible(False)
         del(keys)
 
+        ac = self.card.getAccessBits(self.dump, 1)
+        print(ac)
+        #self.card.__fillAccessMatrix(ac)
+
     
 
 def main():
