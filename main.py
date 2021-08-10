@@ -52,14 +52,17 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
     def __init__(self):
         super().__init__()
         self.setupUi(self)  # Это нужно для инициализации нашего дизайна
-        self.pushButton.clicked.connect(self.buttonReadUID)
-        self.pushButton_2.clicked.connect(self.buttonReadDump)
+        self.pushButton.clicked.connect(self.readUID)
+        self.pushButton_2.clicked.connect(self.readMemory)
         self.pushButton_3.clicked.connect(self.buttonViewAccessBits)
         self.pushButton_4.clicked.connect(self.saveDump)
         self.action_readDump.triggered.connect(self.readDump)
         self.action_saveDump.triggered.connect(self.saveDump)
+        self.action_readUID.triggered.connect(self.readUID)
+        self.action_readMemory.triggered.connect(self.readMemory)
         self.textEdit.setReadOnly(True)
         self.textEdit.setFont(QFont("Consolas", 10))
+        self.keyTable.setFont(QFont("Consolas", 10))
         self.progressBar.setVisible(False)
 
         self.card = rfidCard(vid = 0x1EAF, pid = 0x0030)
@@ -94,6 +97,10 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
 
     def saveDump(self):
         """ Функция сохранения дампа в файл """
+        if len(self.card.dump) == 0:
+            messageBox("Ошибка", "Дампа ещё нет. Нечего сохранять.")
+            return
+
         f = "Proxmark, libnfc (*.bin *.mfd *.dump);;Proxmark emulator (*.eml);;json (*.json);;MIFARE Classic Tool (*.mct)"
         fn = QFileDialog.getSaveFileName(self, 'Сохранить дамп', '', f)[0]
         if fn == "":
@@ -121,37 +128,32 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
         self.acbForm.exec_()
 
 
-    def buttonReadUID(self):
-        """res = self.card.readUID()
+    def readUID(self):
+        """ Чтение UID карты """
+
+        res = self.card.readUID()
         if res == None:
-            self.label.setText("Ошибка чтения")
+            self.label.setText("")
+            messageBox("Ошибка", "Ошибка чтения карты.")
             return
 
         res = list(map(tohex, res))
         self.label.setText(" ".join(res))
-        self.textEdit.setHtml("")"""
 
-        res = self.card.readUID()
-        if res == None:
-            self.label.setText("Ошибка чтения")
-            return
-
-        res = self.card.authBlock(18, [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF], KEYB)
+        """res = self.card.authBlock(18, [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF], KEYB)
         if res:
             if self.card.writeBlock(18, [0x06, 0x02, 0x06, 0x04, 0x06, 0xEE, 0xE6, 0xEE, 0xE6, 0xEE, 0xE6, 0xEE, 0xE6, 0xEE, 0xE6, 0xEE]):
                 self.label.setText("Запись успешна")
             else:
                 self.label.setText("Ошибка записи")
         else:
-            self.label.setText("Ошибка аутентификации")
+            self.label.setText("Ошибка аутентификации")"""
 
-
-
-    def buttonReadDump(self):
+    def readMemory(self):
         res = self.card.readUID()
         if res == None:
-            s = "<b>Ошибка чтения UID карты</b>"
-            self.textEdit.setHtml(s)
+            self.label.setText("")
+            messageBox("Ошибка", "Ошибка чтения карты.")
             return
         res = list(map(tohex, res))
         self.label.setText(" ".join(res))
@@ -168,6 +170,8 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
         # Цикл по секторам RFID карты. В каждой итерации пробуем подобрать пару ключей (A/B) из словаря.
         for i in range(0, 16):
             self.progressBar.setValue(i)
+
+            # Подбираем ключ A
             keys.reset()
             while not keys.end():
                 currentKey = keys.get()
@@ -182,10 +186,11 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                     # для этого снова читаем её UID.
                     r = self.card.readUID()
                     if r == None:
-                        print("ОШИБКА: Потеря карты")
+                        messageBox("Ошибка", "Потеря карты")
             else:
                 self.keysa.append(None)
 
+            # Подбираем ключ B
             keys.reset()
             while not keys.end():
                 currentKey = keys.get()
@@ -200,7 +205,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                     # для этого снова читаем её UID.
                     r = self.card.readUID()
                     if r == None:
-                        print("ОШИБКА: Потеря карты")
+                        messageBox("Ошибка", "Потеря карты")
             else:
                 self.keysb.append(None)
 
@@ -215,6 +220,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
         for i in range(0, 16):
             self.keyTable.setItem(i, 0, QTableWidgetItem(self.keysa[i]))
             self.keyTable.setItem(i, 1, QTableWidgetItem(self.keysb[i]))
+        self.keyTable.resizeRowsToContents();
 
 
         # Проверяем, есть ли смысл пытаться прочитать карту. Для этого нужно, чтобы
