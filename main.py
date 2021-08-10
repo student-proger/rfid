@@ -5,7 +5,7 @@ from threading import Thread, Lock
 
 # Qt
 from PyQt5 import QtWidgets, QtCore, QtGui
-from PyQt5.QtWidgets import QTableWidgetItem, QLabel, QInputDialog, QComboBox, QSystemTrayIcon
+from PyQt5.QtWidgets import QTableWidgetItem, QLabel, QInputDialog, QFileDialog, QComboBox, QSystemTrayIcon
 from PyQt5.QtWidgets import QMessageBox, QWidget, QMenu
 from PyQt5.QtGui import QPixmap, QPainter, QColor, QBrush, QFont
 from PyQt5.QtCore import Qt, QRect
@@ -15,6 +15,10 @@ import mainform
 from rfidCard import rfidCard
 from rfidCard import KEYA, KEYB, TB_SECTOR_TRAILER, TB_DATABLOCK_0, TB_DATABLOCK_1, TB_DATABLOCK_2, TB_UID
 from keyHelper import keyHelper
+from dump_bin import dumpBin
+from dump_eml import dumpEml
+from dump_json import dumpJson
+from dump_mct import dumpMct
 
 from accessbitsunit import accessBitsForm
 
@@ -25,6 +29,18 @@ def tohex(dec):
     if len(s) == 1:
         s = "0" + s
     return s
+
+def messageBox(title, s):
+    """Отображение диалогового окна с сообщением
+
+    :param title: заголовок окна
+    :param s: сообщение
+    """
+    msg = QMessageBox()
+    msg.setIcon(QMessageBox.Information)
+    msg.setText(s)
+    msg.setWindowTitle(title)
+    msg.exec_()
 
 class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
     """ Класс главного окна приложения """
@@ -39,6 +55,9 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
         self.pushButton.clicked.connect(self.buttonReadUID)
         self.pushButton_2.clicked.connect(self.buttonReadDump)
         self.pushButton_3.clicked.connect(self.buttonViewAccessBits)
+        self.pushButton_4.clicked.connect(self.saveDump)
+        self.action_readDump.triggered.connect(self.readDump)
+        self.action_saveDump.triggered.connect(self.saveDump)
         self.textEdit.setReadOnly(True)
         self.textEdit.setFont(QFont("Consolas", 10))
         self.progressBar.setVisible(False)
@@ -47,6 +66,55 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
 
     def __del__(self):
         del(self.card)
+
+    def readDump(self):
+        """ Функция загрузки дампа из файла """
+        f = "Все файлы дампа (*.bin *.mfd *.dump *.eml *.json *.mct);;Proxmark, libnfc (*.bin *.mfd *.dump);;Proxmark emulator (*.eml);;json (*.json);;MIFARE Classic Tool (*.mct);;Все файлы (*.*)"
+        fn = QFileDialog.getOpenFileName(self, 'Открыть дамп', '', f)[0]
+        if fn == "":
+            return
+
+        ext = fn.split(".")[-1].lower()
+        if ext == "bin" or ext == "mfd" or ext == "dump":
+            d = dumpBin()
+        elif ext == "eml":
+            d = dumpEml()
+        elif ext == "json":
+            d = dumpJson()
+        elif ext == "mct":
+            d = dumpMct()
+        else:
+            messageBox("Ошибка", "Неизвестный тип файла")
+            return
+
+        d.loadFromFile(fn)
+        self.card.dump = d.dump
+        print(self.card.dump)
+        del(d)
+
+    def saveDump(self):
+        """ Функция сохранения дампа в файл """
+        f = "Proxmark, libnfc (*.bin *.mfd *.dump);;Proxmark emulator (*.eml);;json (*.json);;MIFARE Classic Tool (*.mct)"
+        fn = QFileDialog.getSaveFileName(self, 'Сохранить дамп', '', f)[0]
+        if fn == "":
+            return
+
+        ext = fn.split(".")[-1].lower()
+        if ext == "bin" or ext == "mfd" or ext == "dump":
+            d = dumpBin()
+        elif ext == "eml":
+            d = dumpEml()
+        elif ext == "json":
+            d = dumpJson()
+        elif ext == "mct":
+            d = dumpMct()
+        else:
+            messageBox("Ошибка", "Неизвестный тип файла")
+            return
+
+        d.dump = self.card.dump
+        d.saveToFile(fn)
+        del(d)
 
     def buttonViewAccessBits(self):
         self.acbForm = accessBitsForm(self.card)
@@ -70,7 +138,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
 
         res = self.card.authBlock(18, [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF], KEYB)
         if res:
-            if self.card.writeBlock(18, [0x01, 0x02, 0x03, 0x04, 0x05, 0xEE, 0xEE, 0xEE, 0xEE, 0xEE, 0xEE, 0xEE, 0xEE, 0xEE, 0xEE, 0xEE]):
+            if self.card.writeBlock(18, [0x06, 0x02, 0x06, 0x04, 0x06, 0xEE, 0xE6, 0xEE, 0xE6, 0xEE, 0xE6, 0xEE, 0xE6, 0xEE, 0xE6, 0xEE]):
                 self.label.setText("Запись успешна")
             else:
                 self.label.setText("Ошибка записи")
@@ -104,7 +172,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
             while not keys.end():
                 currentKey = keys.get()
                 res = self.card.authBlock(self.card.blockOfSector(i), keys.keyToList(currentKey), KEYA)
-                print("A:", currentKey, self.card.blockOfSector(i), res)
+                #print("A:", currentKey, self.card.blockOfSector(i), res)
                 if res:
                     # Успешно найден ключ
                     self.keysa.append(currentKey)
@@ -122,7 +190,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
             while not keys.end():
                 currentKey = keys.get()
                 res = self.card.authBlock(self.card.blockOfSector(i), keys.keyToList(currentKey), KEYB)
-                print("B:", currentKey, self.card.blockOfSector(i), res)
+                #print("B:", currentKey, self.card.blockOfSector(i), res)
                 if res:
                     # Успешно найден ключ
                     self.keysb.append(currentKey)
@@ -136,8 +204,8 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
             else:
                 self.keysb.append(None)
 
-        print("KEY A: ", self.keysa)
-        print("KEY B: ", self.keysb)
+        #print("KEY A: ", self.keysa)
+        #print("KEY B: ", self.keysb)
 
         # Вывод ключей в таблицу на форме
         self.keyTable.clear()
@@ -193,8 +261,6 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                 for i in range(0, 6):
                     self.card.dump[block].append(keys.keyToList(self.keysb[sector])[i])
 
-            print(self.card.dump)
-
             for block in range(0, 64):
                 sector = self.card.sectorOfBlock(block)
                 if self.card.isFirstBlock(block):
@@ -241,9 +307,6 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
         self.progressBar.setVisible(False)
         del(keys)
 
-        print(self.card.canReadAccessBits(1, KEYA))
-
-    
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
