@@ -17,6 +17,7 @@ from rfidCard import KEYA, KEYB, TB_SECTOR_TRAILER, TB_DATABLOCK_0, TB_DATABLOCK
 from keyHelper import keyHelper
 from dump_bin import dumpBin
 from dump_eml import dumpEml
+from dump_json import dumpJson
 
 from accessbitsunit import accessBitsForm
 
@@ -54,12 +55,12 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
     def buttonSaveDump(self):
         f = "Proxmark, libnfc (*.bin *.mfd *.dump);;Proxmark emulator (*.eml);;json (*.json);;MIFARE Classic Tool (*.mct)"
         fn = QFileDialog.getSaveFileName(self, 'Сохранить дамп', '', f)[0]
-        d = dumpEml()
-        #d.dump = self.card.dump
-        #d.saveToFile(fn)
-        d.loadFromFile(fn)
-        self.card.dump = d.dump
-        print(self.card.dump)
+        d = dumpJson()
+        d.dump = self.card.dump
+        d.saveToFile(fn)
+        #d.loadFromFile(fn)
+        #self.card.dump = d.dump
+        #print(self.card.dump)
         del(d)
 
 
