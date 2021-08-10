@@ -30,6 +30,18 @@ def tohex(dec):
         s = "0" + s
     return s
 
+def messageBox(title, s):
+    """Отображение диалогового окна с сообщением
+
+    :param title: заголовок окна
+    :param s: сообщение
+    """
+    msg = QMessageBox()
+    msg.setIcon(QMessageBox.Information)
+    msg.setText(s)
+    msg.setWindowTitle(title)
+    msg.exec_()
+
 class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
     """ Класс главного окна приложения """
 
@@ -43,7 +55,9 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
         self.pushButton.clicked.connect(self.buttonReadUID)
         self.pushButton_2.clicked.connect(self.buttonReadDump)
         self.pushButton_3.clicked.connect(self.buttonViewAccessBits)
-        self.pushButton_4.clicked.connect(self.buttonSaveDump)
+        self.pushButton_4.clicked.connect(self.saveDump)
+        self.action_readDump.triggered.connect(self.readDump)
+        self.action_saveDump.triggered.connect(self.saveDump)
         self.textEdit.setReadOnly(True)
         self.textEdit.setFont(QFont("Consolas", 10))
         self.progressBar.setVisible(False)
@@ -53,17 +67,54 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
     def __del__(self):
         del(self.card)
 
-    def buttonSaveDump(self):
-        f = "Proxmark, libnfc (*.bin *.mfd *.dump);;Proxmark emulator (*.eml);;json (*.json);;MIFARE Classic Tool (*.mct)"
-        fn = QFileDialog.getSaveFileName(self, 'Сохранить дамп', '', f)[0]
-        d = dumpMct()
-        #d.dump = self.card.dump
-        #d.saveToFile(fn)
+    def readDump(self):
+        """ Функция загрузки дампа из файла """
+        f = "Все файлы дампа (*.bin *.mfd *.dump *.eml *.json *.mct);;Proxmark, libnfc (*.bin *.mfd *.dump);;Proxmark emulator (*.eml);;json (*.json);;MIFARE Classic Tool (*.mct);;Все файлы (*.*)"
+        fn = QFileDialog.getOpenFileName(self, 'Открыть дамп', '', f)[0]
+        if fn == "":
+            return
+
+        ext = fn.split(".")[-1].lower()
+        if ext == "bin" or ext == "mfd" or ext == "dump":
+            d = dumpBin()
+        elif ext == "eml":
+            d = dumpEml()
+        elif ext == "json":
+            d = dumpJson()
+        elif ext == "mct":
+            d = dumpMct()
+        else:
+            messageBox("Ошибка", "Неизвестный тип файла")
+            return
+
         d.loadFromFile(fn)
         self.card.dump = d.dump
         print(self.card.dump)
         del(d)
 
+    def saveDump(self):
+        """ Функция сохранения дампа в файл """
+        f = "Proxmark, libnfc (*.bin *.mfd *.dump);;Proxmark emulator (*.eml);;json (*.json);;MIFARE Classic Tool (*.mct)"
+        fn = QFileDialog.getSaveFileName(self, 'Сохранить дамп', '', f)[0]
+        if fn == "":
+            return
+
+        ext = fn.split(".")[-1].lower()
+        if ext == "bin" or ext == "mfd" or ext == "dump":
+            d = dumpBin()
+        elif ext == "eml":
+            d = dumpEml()
+        elif ext == "json":
+            d = dumpJson()
+        elif ext == "mct":
+            d = dumpMct()
+        else:
+            messageBox("Ошибка", "Неизвестный тип файла")
+            return
+
+        d.dump = self.card.dump
+        d.saveToFile(fn)
+        del(d)
 
     def buttonViewAccessBits(self):
         self.acbForm = accessBitsForm(self.card)

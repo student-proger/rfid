@@ -147,8 +147,44 @@ p, li { white-space: pre-wrap; }
      <height>21</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>Карта</string>
+    </property>
+    <addaction name="action_readUID"/>
+    <addaction name="action_readMemory"/>
+   </widget>
+   <widget class="QMenu" name="menu_2">
+    <property name="title">
+     <string>Дамп</string>
+    </property>
+    <addaction name="action_saveDump"/>
+    <addaction name="action_readDump"/>
+   </widget>
+   <addaction name="menu"/>
+   <addaction name="menu_2"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="action_saveDump">
+   <property name="text">
+    <string>Сохранить в файл...</string>
+   </property>
+  </action>
+  <action name="action_readDump">
+   <property name="text">
+    <string>Загрузить из файла...</string>
+   </property>
+  </action>
+  <action name="action_readUID">
+   <property name="text">
+    <string>Прочитать UID</string>
+   </property>
+  </action>
+  <action name="action_readMemory">
+   <property name="text">
+    <string>Считать содержимое памяти</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>
