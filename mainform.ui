@@ -153,6 +153,7 @@ p, li { white-space: pre-wrap; }
     </property>
     <addaction name="action_readUID"/>
     <addaction name="action_readMemory"/>
+    <addaction name="action_writeMemory"/>
    </widget>
    <widget class="QMenu" name="menu_2">
     <property name="title">
@@ -183,6 +184,11 @@ p, li { white-space: pre-wrap; }
   <action name="action_readMemory">
    <property name="text">
     <string>Считать содержимое памяти</string>
+   </property>
+  </action>
+  <action name="action_writeMemory">
+   <property name="text">
+    <string>Записать...</string>
    </property>
   </action>
  </widget>

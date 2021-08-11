@@ -5,7 +5,7 @@ from threading import Thread, Lock
 
 # Qt
 from PyQt5 import QtWidgets, QtCore, QtGui
-from PyQt5.QtWidgets import QTableWidgetItem, QLabel, QInputDialog, QFileDialog, QComboBox, QSystemTrayIcon
+from PyQt5.QtWidgets import QTableWidgetItem, QLabel, QInputDialog, QFileDialog, QComboBox, QSystemTrayIcon, QCheckBox
 from PyQt5.QtWidgets import QMessageBox, QWidget, QMenu
 from PyQt5.QtGui import QPixmap, QPainter, QColor, QBrush, QFont
 from PyQt5.QtCore import Qt, QRect
@@ -21,6 +21,8 @@ from dump_json import dumpJson
 from dump_mct import dumpMct
 
 from accessbitsunit import accessBitsForm
+from writedialogunit import writeDialogForm
+from logunit import logForm
 
 def tohex(dec):
     """ Переводит десятичное число в 16-ричный вид с отбрасыванием `0x` """
@@ -60,15 +62,19 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
         self.action_saveDump.triggered.connect(self.saveDump)
         self.action_readUID.triggered.connect(self.readUID)
         self.action_readMemory.triggered.connect(self.readMemory)
+        self.action_writeMemory.triggered.connect(self.writeMemory)
         self.textEdit.setReadOnly(True)
         self.textEdit.setFont(QFont("Consolas", 10))
         self.keyTable.setFont(QFont("Consolas", 10))
         self.progressBar.setVisible(False)
 
+        self.log = logForm()
+
         self.card = rfidCard(vid = 0x1EAF, pid = 0x0030)
 
     def __del__(self):
         del(self.card)
+        del(self.log)
 
     def readDump(self):
         """ Функция загрузки дампа из файла """
@@ -150,11 +156,16 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
             self.label.setText("Ошибка аутентификации")"""
 
     def readMemory(self):
+        self.log.clear()
+        self.log.show()
+
         res = self.card.readUID()
         if res == None:
             self.label.setText("")
+            self.log.close()
             messageBox("Ошибка", "Ошибка чтения карты.")
             return
+        self.log.add("UID карты прочитан.")
         res = list(map(tohex, res))
         self.label.setText(" ".join(res))
         s = "UID: " + " ".join(res) + "<br>"
@@ -164,6 +175,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
         self.keysb = []
         self.card.dump = []
 
+        self.log.add("Поиск ключей для секторов...")
         self.progressBar.setVisible(True)
         self.progressBar.setMaximum(15)
         keys = keyHelper()
@@ -180,6 +192,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                 if res:
                     # Успешно найден ключ
                     self.keysa.append(currentKey)
+                    self.log.add("Ключ A для сектора " + str(i) + " найден.")
                     break
                 else:
                     # При попытке авторизации сектора неправильным ключом требуется повторная инициализация карты,
@@ -189,6 +202,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                         messageBox("Ошибка", "Потеря карты")
             else:
                 self.keysa.append(None)
+                self.log.add("Не удалось найти ключ A для сектора " + str(i) + ".", True)
 
             # Подбираем ключ B
             keys.reset()
@@ -199,6 +213,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                 if res:
                     # Успешно найден ключ
                     self.keysb.append(currentKey)
+                    self.log.add("Ключ B для сектора " + str(i) + " найден.")
                     break
                 else:
                     # При попытке авторизации сектора неправильным ключом требуется повторная инициализация карты,
@@ -208,7 +223,10 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                         messageBox("Ошибка", "Потеря карты")
             else:
                 self.keysb.append(None)
+                self.log.add("Не удалось найти ключ B для сектора " + str(i) + ".", True)
 
+        self.log.add("Поиск ключей для секторов завершён.")
+        self.log.add("")
         #print("KEY A: ", self.keysa)
         #print("KEY B: ", self.keysb)
 
@@ -243,8 +261,16 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                 if self.card.isFirstBlock(block):
                     if self.keysa[sector] != None:
                         res = self.card.authBlock(block, keys.keyToList(self.keysa[sector]), KEYA)
+                        if res:
+                            self.log.add("Авторизация сектора " + str(sector) + " по ключу A.")
+                        else:
+                            self.log.add("Ошибка авторизации сектора " + str(sector) + " по ключу A.", True)
                     elif self.keysb[sector] != None:
                         res = self.card.authBlock(block, keys.keyToList(self.keysb[sector]), KEYB)
+                        if res:
+                            self.log.add("Авторизация сектора " + str(sector) + " по ключу B.")
+                        else:
+                            self.log.add("Ошибка авторизации сектора " + str(sector) + " по ключу B.", True)
                     else:
                         # Нет ключей для сектора
                         nokey = True
@@ -252,9 +278,12 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                     res = self.card.readBlock(block)
                     if res == None:
                         self.card.dump.append(None)
-                        return
+                        self.log.add("Ошибка считывания данных блока " + str(block) + ".")
+                        continue
                     self.card.dump.append(res)
+                    self.log.add("Данные блока " + str(block) + " считаны.")
 
+            # Добавление найденных ключей в дамп
             for sector in range(0, 16):
                 block = self.card.blockOfSector(sector) + 3
                 temp = []
@@ -267,6 +296,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                 for i in range(0, 6):
                     self.card.dump[block].append(keys.keyToList(self.keysb[sector])[i])
 
+            # Вывод дампа на форму
             for block in range(0, 64):
                 sector = self.card.sectorOfBlock(block)
                 if self.card.isFirstBlock(block):
@@ -312,6 +342,37 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
         
         self.progressBar.setVisible(False)
         del(keys)
+
+    def writeMemory(self):
+        if len(self.card.dump) == 0:
+            messageBox("Ошибка", "Дампа ещё нет. Откройте дамп из файла или считайте с другой карты.")
+            return
+
+        dialog = writeDialogForm()
+        dialog.setWindowTitle("Запись")
+
+        for i in range(0, 16):
+            widget = dialog.findChild(QCheckBox, "checkBox_" + str(i + 1))
+            widget.setChecked(True)
+        dialog.checkBox_17.setChecked(False)
+
+        ba = []
+        if dialog.exec_() != 0:
+            for i in range(0, 16):
+                widget = dialog.findChild(QCheckBox, "checkBox_" + str(i + 1))
+                ba.append(widget.isChecked())
+            ignoreTrailer = dialog.checkBox_17.isChecked()
+        del(dialog)
+
+        # Сохраняем резервную копию записываемого дампа и подбираем ключи к текущей карте
+
+        # Считываем ключи доступа с карты
+
+        # Пишем ранее сохранённый дамп на карту
+
+        # Делаем сравнение записанных данных
+
+        # Восстанавливаем дамп из резервной копии
 
 
 def main():
