@@ -101,6 +101,8 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
         print(self.card.dump)
         del(d)
 
+        self.viewDump()
+
     def saveDump(self):
         """ Функция сохранения дампа в файл """
         if len(self.card.dump) == 0:
@@ -168,8 +170,6 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
         self.log.add("UID карты прочитан.")
         res = list(map(tohex, res))
         self.label.setText(" ".join(res))
-        s = "UID: " + " ".join(res) + "<br>"
-        #s = s + "---------------------------------------------------<br>"
 
         self.keysa = []
         self.keysb = []
@@ -296,49 +296,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                 for i in range(0, 6):
                     self.card.dump[block].append(keys.keyToList(self.keysb[sector])[i])
 
-            # Вывод дампа на форму
-            for block in range(0, 64):
-                sector = self.card.sectorOfBlock(block)
-                if self.card.isFirstBlock(block):
-                    sectorstr = str(sector)
-                    if sector < 10:
-                        sectorstr = "0" + sectorstr
-                    s = s + "---- Sector " + sectorstr + " ------------------------------------<br>"
-
-                blockstr = str(block)
-                if block < 10:
-                    blockstr = "0" + blockstr
-
-                if self.card.dump[block] != None:
-                    ds = list(map(tohex, self.card.dump[block]))
-                    if block == 0:
-                        ss = blockstr + ': <font color="#FF1493">' + " ".join(ds)
-                        ss = ss + "</font>"
-                    elif self.card.isLastBlock(block):
-                        ss = blockstr + ': <font color="#3CB043">' + " ".join(ds[0:6]) + '</font>'
-                        ss = ss + ' <font color="#FF0000">' + " ".join(ds[6:9]) + '</font> '
-                        ss = ss + ds[9]
-                        ss = ss + ' <font color="#3CB043">' + " ".join(ds[10:16]) + '</font>'
-                    else:
-                        ss = blockstr + ": " + " ".join(ds)
-
-                    dd = []
-                    for item in self.card.dump[block]:
-                        if (item >= 32 and item <= 126) or item >= 184:
-                            dd.append(item)
-                        else:
-                            dd.append(183)
-
-                    ch = list(map(chr, dd))
-                    sch = "".join(ch)
-                    sch = sch.replace(" ", "&nbsp;")
-                    ss = ss + "&nbsp;&nbsp;&nbsp;&nbsp;" + sch
-
-                else:
-                    ss = blockstr + ": Ошибка чтения блока"
-                s = s + ss + "<br>"
-
-            self.textEdit.setHtml(s)
+            self.viewDump()
         
         self.progressBar.setVisible(False)
         del(keys)
@@ -373,6 +331,52 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
         # Делаем сравнение записанных данных
 
         # Восстанавливаем дамп из резервной копии
+
+    def viewDump(self):
+        """ Вывод дампа на форму """
+        s = ""
+        for block in range(0, 64):
+            sector = self.card.sectorOfBlock(block)
+            if self.card.isFirstBlock(block):
+                sectorstr = str(sector)
+                if sector < 10:
+                    sectorstr = "0" + sectorstr
+                s = s + "---- Sector " + sectorstr + " ------------------------------------<br>"
+
+            blockstr = str(block)
+            if block < 10:
+                blockstr = "0" + blockstr
+
+            if self.card.dump[block] != None:
+                ds = list(map(tohex, self.card.dump[block]))
+                if block == 0:
+                    ss = blockstr + ': <font color="#FF1493">' + " ".join(ds)
+                    ss = ss + "</font>"
+                elif self.card.isLastBlock(block):
+                    ss = blockstr + ': <font color="#3CB043">' + " ".join(ds[0:6]) + '</font>'
+                    ss = ss + ' <font color="#FF0000">' + " ".join(ds[6:9]) + '</font> '
+                    ss = ss + ds[9]
+                    ss = ss + ' <font color="#3CB043">' + " ".join(ds[10:16]) + '</font>'
+                else:
+                    ss = blockstr + ": " + " ".join(ds)
+
+                dd = []
+                for item in self.card.dump[block]:
+                    if (item >= 32 and item <= 126) or item >= 184:
+                        dd.append(item)
+                    else:
+                        dd.append(183)
+
+                ch = list(map(chr, dd))
+                sch = "".join(ch)
+                sch = sch.replace(" ", "&nbsp;")
+                ss = ss + "&nbsp;&nbsp;&nbsp;&nbsp;" + sch
+
+            else:
+                ss = blockstr + ": Ошибка чтения блока"
+            s = s + ss + "<br>"
+
+        self.textEdit.setHtml(s)
 
 
 def main():
