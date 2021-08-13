@@ -23,6 +23,7 @@ from dump_mct import dumpMct
 from accessbitsunit import accessBitsForm
 from writedialogunit import writeDialogForm
 from logunit import logForm
+from dumpeditorunit import dumpEditorForm
 
 def tohex(dec):
     """ Переводит десятичное число в 16-ричный вид с отбрасыванием `0x` """
@@ -63,6 +64,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
         self.action_readUID.triggered.connect(self.readUID)
         self.action_readMemory.triggered.connect(self.readMemory)
         self.action_writeMemory.triggered.connect(self.writeMemory)
+        self.action_editDump.triggered.connect(self.editDump)
         self.textEdit.setReadOnly(True)
         self.textEdit.setFont(QFont("Consolas", 10))
         self.keyTable.setFont(QFont("Consolas", 10))
@@ -157,6 +159,18 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
         else:
             self.label.setText("Ошибка аутентификации")"""
 
+    def editDump(self):
+        """ Редактирование дампа памяти """
+        if len(self.card.dump) == 0:
+            messageBox("Ошибка", "Дампа ещё нет. Нечего редактировать.")
+            return
+
+        window = dumpEditorForm(self.card.dump)
+        
+        if window.exec_() != 0:
+            pass
+        del(window)
+
     def readMemory(self):
         self.log.clear()
         self.log.show()
@@ -238,7 +252,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
         for i in range(0, 16):
             self.keyTable.setItem(i, 0, QTableWidgetItem(self.keysa[i]))
             self.keyTable.setItem(i, 1, QTableWidgetItem(self.keysb[i]))
-        self.keyTable.resizeRowsToContents();
+        self.keyTable.resizeRowsToContents()
 
 
         # Проверяем, есть ли смысл пытаться прочитать карту. Для этого нужно, чтобы
