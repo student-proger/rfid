@@ -6,6 +6,20 @@ from PyQt5.QtGui import QPixmap, QPainter, QColor, QBrush, QFont
 from PyQt5.QtCore import Qt, QRect
 # design
 import dumpeditorform
+import filldumpeditorform
+import replacedumpeditorform
+
+def messageBox(title, s):
+    """Отображение диалогового окна с сообщением
+
+    :param title: заголовок окна
+    :param s: сообщение
+    """
+    msg = QMessageBox()
+    msg.setIcon(QMessageBox.Information)
+    msg.setText(s)
+    msg.setWindowTitle(title)
+    msg.exec_()
 
 def tohex(dec):
     """ Переводит десятичное число в 16-ричный вид с отбрасыванием `0x` """
@@ -15,10 +29,21 @@ def tohex(dec):
         s = "0" + s
     return s
 
+class fillDumpEditorForm(QtWidgets.QDialog, filldumpeditorform.Ui_Dialog):
+    def __init__(self):
+        super().__init__()
+        self.setupUi(self)
+
+class replaceDumpEditorForm(QtWidgets.QDialog, replacedumpeditorform.Ui_Dialog):
+    def __init__(self):
+        super().__init__()
+        self.setupUi(self)
+
 class dumpEditorForm(QtWidgets.QDialog, dumpeditorform.Ui_Dialog):
     def __init__(self, dump):
         super().__init__()
         self.setupUi(self)  # Это нужно для инициализации нашего дизайна
+        self.dump = dump[:]
         self.tableWidget.clear()
         self.setWindowTitle("Редактор дампа")
         self.tableWidget.setFont(QFont("Consolas", 10))
@@ -27,6 +52,8 @@ class dumpEditorForm(QtWidgets.QDialog, dumpeditorform.Ui_Dialog):
         self.tableWidget.setHorizontalHeaderLabels(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F"])
         self.tableWidget.setVerticalHeaderLabels(list(map(str, [i for i in range(0, 64)])))
         self.tableWidget.cellChanged.connect(self.cellChangeEvent)
+        self.fillButton.clicked.connect(self.fillButtonClick)
+        self.replaceButton.clicked.connect(self.replaceButtonClick)
         self.blockCheck = True
 
         for i in range(0, 64):
@@ -83,3 +110,94 @@ class dumpEditorForm(QtWidgets.QDialog, dumpeditorform.Ui_Dialog):
         self.tableWidget.setItem(row, column, QTableWidgetItem(s))
         self.paintBackground()
         self.blockCheck = False
+
+        self.dump[row][column] = int(s, 16)
+
+    def fillButtonClick(self):
+        window = fillDumpEditorForm()
+        if window.exec_() != 0:
+            s = window.lineEdit.text().strip().upper()
+            if len(s) == 0:
+                s = "00"
+            elif len(s) == 1:
+                s = "0" + s
+            elif len(s) == 2:
+                pass
+            else:
+                messageBox("Ошибка", "Неправильное значение")
+                return
+            # Проверяем на валидность
+            try:
+                tt = int(s, 16)
+            except ValueError:
+                messageBox("Ошибка", "Неправильное значение")
+                return
+
+            value = int(s, 16)
+            a = window.spinBox.value()
+            b = window.spinBox_2.value()
+            if b < a:
+                messageBox("Ошибка", "Номер блока конца заполнения должен быть больше либо равен номеру блока начала.")
+                return
+            for i in range(a, b + 1):
+                for j in range(0, 16):
+                    self.dump[i][j] = value
+                    self.blockCheck = True
+                    self.tableWidget.setItem(i, j, QTableWidgetItem(tohex(value)))
+                    self.paintBackground()
+                    self.blockCheck = False
+        del(window)
+
+    def replaceButtonClick(self):
+        window = replaceDumpEditorForm()
+        if window.exec_() != 0:
+            s = window.lineEdit.text().strip().upper()
+            if len(s) == 0:
+                s = "00"
+            elif len(s) == 1:
+                s = "0" + s
+            elif len(s) == 2:
+                pass
+            else:
+                messageBox("Ошибка", "Неправильное значение")
+                return
+            # Проверяем на валидность
+            try:
+                tt = int(s, 16)
+            except ValueError:
+                messageBox("Ошибка", "Неправильное значение")
+                return
+            value = int(s, 16)
+
+            s = window.lineEdit_2.text().strip().upper()
+            if len(s) == 0:
+                s = "00"
+            elif len(s) == 1:
+                s = "0" + s
+            elif len(s) == 2:
+                pass
+            else:
+                messageBox("Ошибка", "Неправильное значение")
+                return
+            # Проверяем на валидность
+            try:
+                tt = int(s, 16)
+            except ValueError:
+                messageBox("Ошибка", "Неправильное значение")
+                return
+            value2 = int(s, 16)
+
+            a = window.spinBox.value()
+            b = window.spinBox_2.value()
+            if b < a:
+                messageBox("Ошибка", "Номер блока конца должен быть больше либо равен номеру блока начала.")
+                return
+            for i in range(a, b + 1):
+                for j in range(0, 16):
+                    if self.dump[i][j] == value:
+                        self.dump[i][j] = value2
+                        self.blockCheck = True
+                        self.tableWidget.setItem(i, j, QTableWidgetItem(tohex(value2)))
+                        self.paintBackground()
+                        self.blockCheck = False
+        del(window)

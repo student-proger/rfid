@@ -168,8 +168,9 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
         window = dumpEditorForm(self.card.dump)
         
         if window.exec_() != 0:
-            pass
+            self.card.dump = window.dump[:]
         del(window)
+        self.viewDump()
 
     def readMemory(self):
         self.log.clear()
