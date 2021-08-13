@@ -20,6 +20,7 @@ class dumpEditorForm(QtWidgets.QDialog, dumpeditorform.Ui_Dialog):
         super().__init__()
         self.setupUi(self)  # Это нужно для инициализации нашего дизайна
         self.tableWidget.clear()
+        self.setWindowTitle("Редактор дампа")
         self.tableWidget.setFont(QFont("Consolas", 10))
         self.tableWidget.setColumnCount(16)
         self.tableWidget.setRowCount(64)
@@ -31,11 +32,27 @@ class dumpEditorForm(QtWidgets.QDialog, dumpeditorform.Ui_Dialog):
         for i in range(0, 64):
             for j in range(0, 16):
                 self.tableWidget.setItem(i, j, QTableWidgetItem(tohex(dump[i][j])))
-                self.tableWidget.item(i, j).setBackground(QColor(255, 255, 255))
+
+        self.paintBackground()
 
         self.blockCheck = False
         self.tableWidget.resizeColumnsToContents()
         self.tableWidget.resizeRowsToContents()
+
+    def paintBackground(self):
+        for i in range(0, 64):
+            for j in range(0, 16):
+                self.tableWidget.item(i, j).setBackground(QColor(255, 255, 255))
+        for j in range(0, 16):
+            self.tableWidget.item(0, j).setBackground(QColor(255, 0, 0))
+        for i in range(0, 64):
+            if i % 4 == 3:
+                for j in range(0, 6):
+                    self.tableWidget.item(i, j).setBackground(QColor(139, 233, 167))
+                for j in range(10, 16):
+                    self.tableWidget.item(i, j).setBackground(QColor(139, 233, 167))
+                for j in range(6, 9):
+                    self.tableWidget.item(i, j).setBackground(QColor(249, 170, 174))
 
     def cellChangeEvent(self, row, column):
         """Событие вызывается при редактировании ячейки.
@@ -47,12 +64,22 @@ class dumpEditorForm(QtWidgets.QDialog, dumpeditorform.Ui_Dialog):
             return
 
         sender = self.sender()
-        s = sender.item(row, column).text().strip()
+        s = sender.item(row, column).text().strip().upper()
         if len(s) == 0:
             s = "00"
-        if len(s) == 1:
+        elif len(s) == 1:
             s = "0" + s
+        elif len(s) == 2:
+            pass
+        else:
+            s = "00"
+        # Проверяем на валидность
+        try:
+            tt = int(s, 16)
+        except ValueError:
+            s = "00"
+
         self.blockCheck = True
         self.tableWidget.setItem(row, column, QTableWidgetItem(s))
+        self.paintBackground()
         self.blockCheck = False
-
