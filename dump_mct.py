@@ -47,7 +47,8 @@ class dumpMct():
                 if line[0] == "+":
                     continue
                 q = [line[i:i+2] for i in range(0, len(line), 2)]
-                q = q[:-1]
+                if q[-1] == "\n":
+                    q = q[:-1]
                 w = []
                 for item in q:
                     w.append(int(item, 16))
