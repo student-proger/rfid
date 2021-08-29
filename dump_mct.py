@@ -15,10 +15,13 @@ A0A1A2A3A4A5787788C1FFFFFFFFFFFF
 
 def tohex(dec):
     """ Переводит десятичное число в 16-ричный вид с отбрасыванием `0x` """
-    s = hex(dec).split('x')[-1]
-    s = s.upper()
-    if len(s) == 1:
-        s = "0" + s
+    if dec != None:
+        s = hex(dec).split('x')[-1]
+        s = s.upper()
+        if len(s) == 1:
+            s = "0" + s
+    else:
+        s = "--"
     return s
 
 class dumpMct():

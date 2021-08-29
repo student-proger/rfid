@@ -27,10 +27,13 @@ from dumpeditorunit import dumpEditorForm
 
 def tohex(dec):
     """ Переводит десятичное число в 16-ричный вид с отбрасыванием `0x` """
-    s = hex(dec).split('x')[-1]
-    s = s.upper()
-    if len(s) == 1:
-        s = "0" + s
+    if dec != None:
+        s = hex(dec).split('x')[-1]
+        s = s.upper()
+        if len(s) == 1:
+            s = "0" + s
+    else:
+        s = "--"
     return s
 
 def messageBox(title, s):
@@ -203,7 +206,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
             while not keys.end():
                 currentKey = keys.get()
                 res = self.card.authBlock(self.card.blockOfSector(i), keys.keyToList(currentKey), KEYA)
-                #print("A:", currentKey, self.card.blockOfSector(i), res)
+                print("A:", currentKey, self.card.blockOfSector(i), res)
                 if res:
                     # Успешно найден ключ
                     self.keysa.append(currentKey)
@@ -224,7 +227,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
             while not keys.end():
                 currentKey = keys.get()
                 res = self.card.authBlock(self.card.blockOfSector(i), keys.keyToList(currentKey), KEYB)
-                #print("B:", currentKey, self.card.blockOfSector(i), res)
+                print("B:", currentKey, self.card.blockOfSector(i), res)
                 if res:
                     # Успешно найден ключ
                     self.keysb.append(currentKey)
@@ -292,7 +295,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                 if not nokey:
                     res = self.card.readBlock(block)
                     if res == None:
-                        self.card.dump.append(None)
+                        self.card.dump.append([None] * 16)
                         self.log.add("Ошибка считывания данных блока " + str(block) + ".")
                         continue
                     self.card.dump.append(res)
@@ -377,8 +380,11 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
 
                 dd = []
                 for item in self.card.dump[block]:
-                    if (item >= 32 and item <= 126) or item >= 184:
-                        dd.append(item)
+                    if item != None:
+                        if (item >= 32 and item <= 126) or item >= 184:
+                            dd.append(item)
+                        else:
+                            dd.append(183)
                     else:
                         dd.append(183)
 
