@@ -133,7 +133,8 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
             return
 
         d.dump = self.card.dump
-        d.saveToFile(fn)
+        if not d.saveToFile(fn):
+            messageBox("Ошибка", "Ошибка экспорта дампа.")
         del(d)
 
     def buttonViewAccessBits(self):

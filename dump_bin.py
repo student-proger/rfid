@@ -37,6 +37,10 @@ class dumpBin():
 
     def saveToFile(self, fn):
         """ Сохранение дампа в файл """
+        for i in range(0, 64):
+            for j in range(0, 16):
+                if self._dump[i][j] == None:
+                    return False
         try:
             f = open(fn, "wb")
             for i in range(0, 64):
