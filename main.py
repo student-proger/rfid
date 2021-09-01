@@ -187,7 +187,6 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
             messageBox("Ошибка", "Ошибка чтения карты.")
             return
 
-        self.card.lastReadID = res[:]
         self.log.add("UID карты прочитан.")
         res = list(map(tohex, res))
         self.label.setText(" ".join(res))
@@ -320,7 +319,6 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                 for i in range(0, 6):
                     self.card.dump[block].append(keys.keyToList(self.keysb[sector])[i])
 
-            #self.card.copyDump()
             self.viewDump()
         
         self.progressBar.setVisible(False)
@@ -347,15 +345,98 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
             ignoreTrailer = dialog.checkBox_17.isChecked()
         del(dialog)
 
-        # Сохраняем резервную копию записываемого дампа и подбираем ключи к текущей карте
+        self.log.clear()
+        self.log.show()
 
-        # Считываем ключи доступа с карты
+        res = self.card.readUID()
+        if res == None:
+            self.label.setText("")
+            self.log.close()
+            messageBox("Ошибка", "Ошибка чтения карты.")
+            return
 
-        # Пишем ранее сохранённый дамп на карту
+        self.keysa = []
+        self.keysb = []
 
-        # Делаем сравнение записанных данных
+        self.progressBar.setVisible(True)
+        self.progressBar.setMaximum(15)
+        keys = keyHelper()
+        # Цикл по секторам RFID карты. В каждой итерации пробуем подобрать пару ключей (A/B) из словаря.
+        for i in range(0, 16):
+            if ba[i]:
+                self.progressBar.setValue(i)
 
-        # Восстанавливаем дамп из резервной копии
+                # Подбираем ключ A
+                keys.reset()
+                while not keys.end():
+                    currentKey = keys.get()
+                    res = self.card.authBlock(self.card.blockOfSector(i), keys.keyToList(currentKey), KEYA)
+                    print("A:", currentKey, self.card.blockOfSector(i), res)
+                    if res:
+                        # Успешно найден ключ
+                        self.keysa.append(currentKey)
+                        self.log.add("Ключ A для сектора " + str(i) + " найден.")
+                        break
+                    else:
+                        # При попытке авторизации сектора неправильным ключом требуется повторная инициализация карты,
+                        # для этого снова читаем её UID.
+                        r = self.card.readUID()
+                        if r == None:
+                            messageBox("Ошибка", "Потеря карты")
+                else:
+                    self.keysa.append(None)
+                    self.log.add("Не удалось найти ключ A для сектора " + str(i) + ".", True)
+
+                # Подбираем ключ B
+                keys.reset()
+                while not keys.end():
+                    currentKey = keys.get()
+                    res = self.card.authBlock(self.card.blockOfSector(i), keys.keyToList(currentKey), KEYB)
+                    print("B:", currentKey, self.card.blockOfSector(i), res)
+                    if res:
+                        # Успешно найден ключ
+                        self.keysb.append(currentKey)
+                        self.log.add("Ключ B для сектора " + str(i) + " найден.")
+                        break
+                    else:
+                        # При попытке авторизации сектора неправильным ключом требуется повторная инициализация карты,
+                        # для этого снова читаем её UID.
+                        r = self.card.readUID()
+                        if r == None:
+                            messageBox("Ошибка", "Потеря карты")
+                else:
+                    self.keysb.append(None)
+                    self.log.add("Не удалось найти ключ B для сектора " + str(i) + ".", True)
+            else:
+                self.keysa.append(None)
+                self.keysb.append(None)
+
+        print("KEY A: ", self.keysa)
+        print("KEY B: ", self.keysb)
+
+        for i in range(0, 16):
+            if ba[i]:
+                block1 = self.card.blockOfSector(i)
+                if ignoreTrailer:
+                    block2 = block1 + 2
+                else:
+                    block2 = block1 + 3
+                for j in range(block1, block2+1):
+                    if i == 0 and j == 0: # пропускаем нулевой блок
+                        continue
+
+                    res = self.card.authBlock(j, keys.keyToList(self.keysb[i]), KEYB)
+                    if not res:
+                        res = self.card.authBlock(j, keys.keyToList(self.keysa[i]), KEYA)
+                    if res:
+                        if self.card.writeBlock(j, self.card.dump[j]):
+                            self.log.add("Блок " + str(j) + ": запись успешна")
+                        else:
+                            self.log.add("Блок " + str(j) + ": ошибка записи")
+                    else:
+                        self.log.add("Блок " + str(j) + ": ошибка аутентификации")
+        del(keys)
+
 
     def viewDump(self):
         """ Вывод дампа на форму """
