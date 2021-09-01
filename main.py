@@ -103,7 +103,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
 
         d.loadFromFile(fn)
         self.card.dump = d.dump
-        print(self.card.dump)
+
         del(d)
 
         self.viewDump()
@@ -301,7 +301,10 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                         self.card.dump.append([None] * 16)
                         self.log.add("Ошибка считывания данных блока " + str(block) + ".")
                         continue
-                    self.card.dump.append(res)
+                    temp = []
+                    for item in res:
+                        temp.append(item)
+                    self.card.dump.append(temp)
                     self.log.add("Данные блока " + str(block) + " считаны.")
 
             # Добавление найденных ключей в дамп
