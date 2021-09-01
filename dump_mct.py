@@ -15,10 +15,13 @@ A0A1A2A3A4A5787788C1FFFFFFFFFFFF
 
 def tohex(dec):
     """ Переводит десятичное число в 16-ричный вид с отбрасыванием `0x` """
-    s = hex(dec).split('x')[-1]
-    s = s.upper()
-    if len(s) == 1:
-        s = "0" + s
+    if dec != None:
+        s = hex(dec).split('x')[-1]
+        s = s.upper()
+        if len(s) == 1:
+            s = "0" + s
+    else:
+        s = "--"
     return s
 
 class dumpMct():
@@ -42,16 +45,34 @@ class dumpMct():
         """ Загрузка дампа из файла """
         self._dump = []
         try:
+            sector = -1
             f = open(fn, "rt")
             for line in f:
                 if line[0] == "+":
+                    sector += 1
+                    fsector = int(line.split()[-1])
+                    if sector != fsector:
+                        while sector < fsector:
+                            for _ in range(0, 4):
+                                t = [None] * 16
+                                self._dump.append(t)
+                            sector += 1
                     continue
                 q = [line[i:i+2] for i in range(0, len(line), 2)]
-                q = q[:-1]
+                if q[-1] == "\n":
+                    q = q[:-1]
                 w = []
                 for item in q:
-                    w.append(int(item, 16))
+                    if item != "--":
+                        w.append(int(item, 16))
+                    else:
+                        w.append(None)
                 self._dump.append(w)
+            if sector < 63:
+                for _ in range(sector, 64):
+                    for _ in range(0, 4):
+                        t = [None] * 16
+                        self._dump.append(t)
             f.close()
         except:
             return False
@@ -62,16 +83,26 @@ class dumpMct():
         """ Сохранение дампа в файл """
         try:
             f = open(fn, "wb")
+            ok = True
             for i in range(0, 64):
                 if i % 4 == 0:
-                    ss = "+Sector: " + str(i // 4)
-                    ss = list(map(ord, list(ss)))
-                    f.write(bytes(ss))
-                    f.write(bytes([10])) # символ переноса строки
-                s = list(map(ord, list("".join(list(map(tohex, self._dump[i]))))))
-                f.write(bytes(s))
-                if i < 63:
-                    f.write(bytes([10])) # символ переноса строки
+                    # Проверяем наличие данных в секторе перед его записью:
+                    ok = False
+                    for k in range(i, i+4):
+                        for t in range(0, 16):
+                            if self._dump[k][t] != None:
+                                ok = True
+                                break
+                    if ok:
+                        ss = "+Sector: " + str(i // 4)
+                        ss = list(map(ord, list(ss)))
+                        f.write(bytes(ss))
+                        f.write(bytes([10])) # символ переноса строки
+                if ok:
+                    s = list(map(ord, list("".join(list(map(tohex, self._dump[i]))))))
+                    f.write(bytes(s))
+                    if i < 63:
+                        f.write(bytes([10])) # символ переноса строки
             f.close()
         except:
             return False

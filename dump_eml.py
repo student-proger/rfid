@@ -1,6 +1,7 @@
 """
 Класс для работы с дампами в формате eml.
 Представляет собой текстовый файл с hex-дампом. Каждый блок с отдельной строки.
+Дамп нельзя сохранить, если он неполный.
 
 Пример:
 DB5AA4B0950804006263646566676869
@@ -43,7 +44,8 @@ class dumpEml():
             f = open(fn, "rt")
             for line in f:
                 q = [line[i:i+2] for i in range(0, len(line), 2)]
-                q = q[:-1]
+                if q[-1] == "\n":
+                    q = q[:-1]
                 w = []
                 for item in q:
                     w.append(int(item, 16))
@@ -56,6 +58,10 @@ class dumpEml():
 
     def saveToFile(self, fn):
         """ Сохранение дампа в файл """
+        for i in range(0, 64):
+            for j in range(0, 16):
+                if self._dump[i][j] == None:
+                    return False
         try:
             f = open(fn, "wb")
             for i in range(0, 64):

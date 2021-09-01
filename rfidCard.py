@@ -17,7 +17,7 @@ TB_DATABLOCK_2 = 0x03
 TB_UID = 0x04
 
 class rfidCard():
-    # Дамп считанных данных
+    # дамп данных
     dump = []
 
     def __init__(self, vid, pid):

@@ -37,6 +37,8 @@ class keyHelper():
 
     def keyToList(self, s):
         """ Преобразовывает строковый вид ключа к списку """
+        if s == None:
+            return [None] * 6
         w = []
         for i in range(0, 6):
             k = "0x" + s[i * 2:i * 2 + 2]
