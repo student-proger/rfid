@@ -169,7 +169,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
             messageBox("Ошибка", "Дампа ещё нет. Нечего редактировать.")
             return
 
-        window = dumpEditorForm(self.card.dump)
+        window = dumpEditorForm(self.card.dump[:])
         
         if window.exec_() != 0:
             self.card.dump = window.dump[:]
@@ -186,6 +186,8 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
             self.log.close()
             messageBox("Ошибка", "Ошибка чтения карты.")
             return
+
+        self.card.lastReadID = res[:]
         self.log.add("UID карты прочитан.")
         res = list(map(tohex, res))
         self.label.setText(" ".join(res))
@@ -315,6 +317,7 @@ class RfidApp(QtWidgets.QMainWindow, mainform.Ui_MainWindow):
                 for i in range(0, 6):
                     self.card.dump[block].append(keys.keyToList(self.keysb[sector])[i])
 
+            #self.card.copyDump()
             self.viewDump()
         
         self.progressBar.setVisible(False)
